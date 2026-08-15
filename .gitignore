@@ -1,0 +1,8 @@
+# 依赖与工具链（本机构建用，勿提交——junction 指向本机绝对路径）
+node_modules/
+*.tsbuildinfo
+*.tgz
+.npm-cache/
+
+# 说明：lib/（构建产物）故意纳入提交——让其它电脑 clone 后开箱即用，无需构建工具链。
+# 改源码后请重建并一并提交：见 README「开发 / 重建」。
