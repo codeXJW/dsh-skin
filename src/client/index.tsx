@@ -29,12 +29,14 @@ interface SkinConfig {
   accent: string
   bgImage: string | null
   bgOpacity: number
+  /** 界面面板不透明度（0.2~1，越低背景越透）。 */
+  uiAlpha: number
   /** 当前生效的预设皮肤 id；null = 自定义组合。 */
   presetId: string | null
 }
 
 function defaultConfig(): SkinConfig {
-  return { enabled: true, accent: '#3964fe', bgImage: null, bgOpacity: 0.9, presetId: null }
+  return { enabled: true, accent: '#3964fe', bgImage: null, bgOpacity: 0.9, uiAlpha: 0.62, presetId: null }
 }
 
 function loadConfig(): SkinConfig {
@@ -47,6 +49,7 @@ function loadConfig(): SkinConfig {
       accent: typeof p.accent === 'string' && /^#[0-9a-fA-F]{6}$/.test(p.accent) ? p.accent : '#3964fe',
       bgImage: typeof p.bgImage === 'string' ? p.bgImage : null,
       bgOpacity: typeof p.bgOpacity === 'number' ? Math.min(1, Math.max(0.1, p.bgOpacity)) : 0.9,
+      uiAlpha: typeof p.uiAlpha === 'number' ? Math.min(1, Math.max(0.2, p.uiAlpha)) : 0.62,
       presetId: typeof p.presetId === 'string' && SKIN_PRESETS.some((s) => s.id === p.presetId) ? p.presetId : null,
     }
   } catch {
@@ -121,7 +124,7 @@ function buildCss(cfg: SkinConfig): string {
   L.push(cssVar('dsw-alias-label-primary-bluish', ramp['dsw-static-deepseek-900']))
   L.push(cssVar('dsh-skin-image', img))
   L.push(cssVar('dsh-skin-image-opacity', String(cfg.bgOpacity)))
-  L.push(cssVar('dsh-skin-ui-alpha', '0.74'))
+  L.push(cssVar('dsh-skin-ui-alpha', String(cfg.uiAlpha)))
   L.push('}')
 
   // 暗色：品牌 token 单独覆盖（更高特异性压过 body[data-ds-dark-theme] 块）
@@ -233,6 +236,7 @@ function SkinSection(): ReactElement {
       accent: preset.accent,
       bgImage: preset.bgImage,
       bgOpacity: preset.bgOpacity,
+      uiAlpha: preset.uiAlpha,
       presetId: preset.id,
     })
 
@@ -322,6 +326,21 @@ function SkinSection(): ReactElement {
             onChange={(e) => update({ bgOpacity: Number(e.target.value) })}
           />
           <span style={hint}>{Math.round(cfg.bgOpacity * 100)}%</span>
+        </div>
+      )}
+
+      {cfg.bgImage !== null && (
+        <div style={row}>
+          <span style={rowLabel}>界面透明度</span>
+          <input
+            type="range"
+            min={0.2}
+            max={1}
+            step={0.01}
+            value={cfg.uiAlpha}
+            onChange={(e) => update({ uiAlpha: Number(e.target.value) })}
+          />
+          <span style={hint}>{Math.round((1 - cfg.uiAlpha) * 100)}% 透</span>
         </div>
       )}
 

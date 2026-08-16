@@ -21,6 +21,8 @@ export interface SkinPreset {
   accent: string
   bgImage: string
   bgOpacity: number
+  /** 界面面板不透明度（越低背景越透）。 */
+  uiAlpha: number
 }
 
 export const SKIN_PRESETS: SkinPreset[] = [
@@ -31,7 +33,8 @@ export const SKIN_PRESETS: SkinPreset[] = [
     credit: 'touhou-hakurei（作者 xiake595）CC BY-NC-SA 4.0',
     accent: '#c8442f',
     bgImage: HAKUREI_PALACE_LIGHT,
-    bgOpacity: 0.85,
+    bgOpacity: 0.9,
+    uiAlpha: 0.58,
   },
   {
     id: 'hakurei-night',
@@ -40,7 +43,8 @@ export const SKIN_PRESETS: SkinPreset[] = [
     credit: 'touhou-hakurei（作者 xiake595）CC BY-NC-SA 4.0',
     accent: '#c8442f',
     bgImage: HAKUREI_PALACE_DARK,
-    bgOpacity: 0.85,
+    bgOpacity: 0.9,
+    uiAlpha: 0.58,
   },
   {
     id: 'maid-day',
@@ -49,7 +53,8 @@ export const SKIN_PRESETS: SkinPreset[] = [
     credit: 'dsh-deep-whale（作者 Small-tailqwq）CC BY-NC-SA 4.0',
     accent: '#c5a468',
     bgImage: MAID_PALACE_DAY,
-    bgOpacity: 0.9,
+    bgOpacity: 0.92,
+    uiAlpha: 0.62,
   },
   {
     id: 'maid-night',
@@ -58,7 +63,8 @@ export const SKIN_PRESETS: SkinPreset[] = [
     credit: 'dsh-deep-whale（作者 Small-tailqwq）CC BY-NC-SA 4.0',
     accent: '#c5a468',
     bgImage: MAID_PALACE_NIGHT,
-    bgOpacity: 0.9,
+    bgOpacity: 0.92,
+    uiAlpha: 0.62,
   },
   {
     id: 'miku',
@@ -67,6 +73,7 @@ export const SKIN_PRESETS: SkinPreset[] = [
     credit: '@linxin666/dsh-client-ui-skin-miku（作者 涂山苏苏）BSD-3-Clause',
     accent: '#2e9bff',
     bgImage: MIKU_BACKDROP,
-    bgOpacity: 0.85,
+    bgOpacity: 0.88,
+    uiAlpha: 0.52,
   },
 ]
