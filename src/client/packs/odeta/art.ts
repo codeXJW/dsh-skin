@@ -10,40 +10,49 @@ function svgUri(svg: string): string {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
 }
 
-/** 一片雪花的笔画（以 0,0 为中心，半径 14）。 */
+/** 一片六枝晶雪花（以 0,0 为中心，臂长 15，两对侧枝 + 中心六边形）。 */
 function snowflake(stroke: string, width: number): string {
+  const arm = `<path d='M0 0V-15'/><path d='M0-10 -3.4-13.4M0-10 3.4-13.4'/><path d='M0-5.4 -2.6-8.8M0-5.4 2.6-8.8'/>`
+  let arms = ''
+  for (let i = 0; i < 6; i++) arms += `<g transform='rotate(${i * 60})'>${arm}</g>`
   return `<g fill='none' stroke='${stroke}' stroke-width='${width}' stroke-linecap='round'>`
-    + `<path d='M0-14V14M-12.1-7 12.1 7M-12.1 7 12.1-7'/>`
-    + `<path d='M0-14 -3.5-9.5M0-14 3.5-9.5M0 14 -3.5 9.5M0 14 3.5 9.5'/>`
-    + `<path d='M-12.1-7 -7.5-4.3M-12.1-7 -9.4-11.7M12.1 7 7.5 4.3M12.1 7 9.4 11.7'/>`
-    + `<path d='M-12.1 7 -7.5 4.3M-12.1 7 -9.4 11.7M12.1-7 7.5-4.3M12.1-7 9.4-11.7'/>`
+    + arms
+    + `<path d='M0-3 2.6-1.5 2.6 1.5 0 3 -2.6 1.5 -2.6-1.5Z'/>`
     + `</g>`
 }
 
 /** 远景雪层贴片（小而密，无缝平铺，慢速）。 */
 export const ODETA_SNOW_TILE_FAR = svgUri(
   `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 320'>`
-  + `<g fill='#ffffff' opacity='.55'>`
+  + `<g fill='#ffffff' opacity='.6'>`
   + `<circle cx='40' cy='52' r='1.8'/><circle cx='150' cy='30' r='1.4'/><circle cx='262' cy='68' r='2'/>`
   + `<circle cx='90' cy='140' r='1.5'/><circle cx='210' cy='120' r='1.9'/><circle cx='300' cy='170' r='1.4'/>`
   + `<circle cx='55' cy='230' r='2'/><circle cx='170' cy='205' r='1.5'/><circle cx='255' cy='258' r='1.8'/>`
   + `<circle cx='120' cy='295' r='1.6'/><circle cx='305' cy='300' r='1.9'/><circle cx='20' cy='310' r='1.4'/>`
+  + `<circle cx='75' cy='88' r='1.3'/><circle cx='185' cy='76' r='1.7'/><circle cx='245' cy='152' r='1.4'/>`
+  + `<circle cx='135' cy='178' r='1.8'/><circle cx='25' cy='160' r='1.5'/><circle cx='285' cy='215' r='1.6'/>`
+  + `<circle cx='98' cy='262' r='1.4'/><circle cx='205' cy='300' r='1.7'/>`
   + `</g>`
-  + `<g transform='translate(105 80) scale(.5)' opacity='.5'>${snowflake('#ffffff', 2.4)}</g>`
-  + `<g transform='translate(238 232) scale(.42)' opacity='.45'>${snowflake('#ffffff', 2.4)}</g>`
+  + `<g transform='translate(105 80) scale(.55)' opacity='.6'>${snowflake('#ffffff', 2.2)}</g>`
+  + `<g transform='translate(238 232) scale(.45)' opacity='.55'>${snowflake('#ffffff', 2.2)}</g>`
+  + `<g transform='translate(40 190) scale(.4)' opacity='.5'>${snowflake('#eaf3fb', 2.2)}</g>`
+  + `<g transform='translate(290 30) scale(.48)' opacity='.55'>${snowflake('#ffffff', 2.2)}</g>`
   + `</svg>`,
 )
 
 /** 近景雪层贴片（大而疏，无缝平铺，快速 → 视差）。 */
 export const ODETA_SNOW_TILE_NEAR = svgUri(
   `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 480'>`
-  + `<g fill='#ffffff' opacity='.7'>`
+  + `<g fill='#ffffff' opacity='.75'>`
   + `<circle cx='70' cy='120' r='2.6'/><circle cx='330' cy='60' r='2.2'/><circle cx='430' cy='220' r='2.8'/>`
   + `<circle cx='180' cy='330' r='2.4'/><circle cx='390' cy='420' r='2.2'/><circle cx='50' cy='440' r='2.6'/>`
+  + `<circle cx='260' cy='420' r='2'/><circle cx='450' cy='40' r='2.4'/><circle cx='140' cy='230' r='2.1'/>`
   + `</g>`
-  + `<g transform='translate(250 170) scale(.9)' opacity='.75'>${snowflake('#ffffff', 2.2)}</g>`
-  + `<g transform='translate(90 390) scale(.65)' opacity='.6'>${snowflake('#eaf3fb', 2.2)}</g>`
-  + `<g transform='translate(420 350) scale(.5)' opacity='.55'>${snowflake('#ffffff', 2.2)}</g>`
+  + `<g transform='translate(250 170) scale(1.05)' opacity='.8'>${snowflake('#ffffff', 2)}</g>`
+  + `<g transform='translate(90 390) scale(.8)' opacity='.7'>${snowflake('#eaf3fb', 2)}</g>`
+  + `<g transform='translate(420 350) scale(.62)' opacity='.65'>${snowflake('#ffffff', 2)}</g>`
+  + `<g transform='translate(160 60) scale(.7)' opacity='.7'>${snowflake('#f4f9fd', 2)}</g>`
+  + `<g transform='translate(370 260) scale(.5)' opacity='.6'>${snowflake('#ffffff', 2)}</g>`
   + `</svg>`,
 )
 

@@ -124,14 +124,14 @@ body[data-dsh-odeta] [data-odeta-chrome='snow-near'] {
 body[data-dsh-odeta] [data-odeta-chrome='snow-far'] {
   background-image: var(--odeta-snow-far-art);
   background-size: 320px 320px;
-  opacity: 0.5;
+  opacity: 0.65;
   animation: odetaSnowFar 46s linear infinite;
 }
 
 body[data-dsh-odeta] [data-odeta-chrome='snow-near'] {
   background-image: var(--odeta-snow-near-art);
   background-size: 480px 480px;
-  opacity: 0.7;
+  opacity: 0.85;
   animation: odetaSnowNear 26s linear infinite;
 }
 
@@ -147,20 +147,20 @@ body[data-dsh-odeta] [data-odeta-chrome='snow-near'] {
 }
 
 body[data-ds-dark-theme][data-dsh-odeta] [data-odeta-chrome='snow-far'] {
-  opacity: 0.4;
+  opacity: 0.5;
 }
 
 body[data-ds-dark-theme][data-dsh-odeta] [data-odeta-chrome='snow-near'] {
-  opacity: 0.5;
+  opacity: 0.62;
 }
 
 /* 会话进行中：雪变小变淡，让位给内容。 */
 body[data-dsh-odeta][data-odeta-chat-active] [data-odeta-chrome='snow-far'] {
-  opacity: 0.28;
+  opacity: 0.4;
 }
 
 body[data-dsh-odeta][data-odeta-chat-active] [data-odeta-chrome='snow-near'] {
-  opacity: 0.38;
+  opacity: 0.52;
 }
 
 /* ── 立绘层（仅本机立绘存在时挂载） ── */
