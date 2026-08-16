@@ -122,3 +122,28 @@ const cssTarget = join(root, 'src', 'client', 'packs', 'maid-atelier', 'css.gene
 writeFileSync(cssTarget, GEN_HEADER + `export const MAID_ATELIER_CSS = ${JSON.stringify(maidCss)}\n`)
 console.log(' ', 'MAID_ATELIER_CSS', Math.round(maidCss.length / 1024) + 'KB')
 console.log('written:', cssTarget)
+
+/* ── 4. odeta 本机素材槽（assets-local/ 被 gitignore，素材不分发） ── */
+
+const odetaLocal = join(root, 'src', 'client', 'packs', 'odeta', 'assets-local')
+
+/** 按候选文件名读取本机图片为 data URI；全部缺失时返回空串（皮肤退化为纯原创装饰版）。 */
+function localImage(names) {
+  for (const n of names) {
+    try {
+      const buf = readFileSync(join(odetaLocal, n))
+      const ext = n.split('.').pop().toLowerCase()
+      const mime = ext === 'png' ? 'image/png' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/webp'
+      return `data:${mime};base64,${buf.toString('base64')}`
+    } catch { /* 尝试下一个候选名 */ }
+  }
+  return ''
+}
+
+console.log('== packs/odeta/local-art.generated.ts ==')
+writeGenerated(['packs', 'odeta', 'local-art.generated.ts'], {
+  ODETA_LOCAL_PORTRAIT: localImage(['portrait.webp', 'portrait.png', 'portrait.jpg', 'portrait.jpeg']),
+  ODETA_LOCAL_BACKDROP: localImage(['backdrop.webp', 'backdrop.png', 'backdrop.jpg', 'backdrop.jpeg']),
+}, `// 本机素材（assets-local/，不进仓库）。此文件的本地变更请勿提交；
+// 仓库内版本保持空串占位，其它机器 clone 后皮肤以纯原创装饰版工作。
+`)
