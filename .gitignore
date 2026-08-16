@@ -3,6 +3,10 @@ node_modules/
 *.tsbuildinfo
 *.tgz
 .npm-cache/
+.npm-cache-tmp/
+
+# 第三方皮肤素材临时克隆/解压目录（提取脚本 .tmp-skins 输入源，不入库）
+.tmp-skins/
 
 # 说明：lib/（构建产物）故意纳入提交——让其它电脑 clone 后开箱即用，无需构建工具链。
 # 改源码后请重建并一并提交：见 README「开发 / 重建」。

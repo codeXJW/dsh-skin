@@ -6,11 +6,14 @@
  *    覆盖 design-platform.css 里的 --dsw-* 设计 token（body 亮色 /
  *    body[data-ds-dark-theme] 暗色两个作用域），并挂 body[data-dsh-skin] 属性。
  *  - 设置 → 「外观皮肤」section（settings.section 列表槽）：
+ *    二次元预设皮肤画廊（内置博丽神社/深海女仆/初音未来，素材与署名见 presets/）/
  *    开关 / 主题色（取色器 + 预设色板）/ 背景图上传（FileReader → data URI，
  *    localStorage 持久化）/ 背景透明度 / 恢复默认。
  */
 import { useEffect, useState } from 'react'
 import type { ChangeEvent, CSSProperties, ReactElement } from 'react'
+import { SKIN_PRESETS } from './presets'
+import type { SkinPreset } from './presets'
 
 const STORAGE_KEY = 'dsh-skin:config'
 const STYLE_ID = 'dsh-skin-style'
@@ -26,10 +29,12 @@ interface SkinConfig {
   accent: string
   bgImage: string | null
   bgOpacity: number
+  /** 当前生效的预设皮肤 id；null = 自定义组合。 */
+  presetId: string | null
 }
 
 function defaultConfig(): SkinConfig {
-  return { enabled: true, accent: '#3964fe', bgImage: null, bgOpacity: 0.9 }
+  return { enabled: true, accent: '#3964fe', bgImage: null, bgOpacity: 0.9, presetId: null }
 }
 
 function loadConfig(): SkinConfig {
@@ -42,6 +47,7 @@ function loadConfig(): SkinConfig {
       accent: typeof p.accent === 'string' && /^#[0-9a-fA-F]{6}$/.test(p.accent) ? p.accent : '#3964fe',
       bgImage: typeof p.bgImage === 'string' ? p.bgImage : null,
       bgOpacity: typeof p.bgOpacity === 'number' ? Math.min(1, Math.max(0.1, p.bgOpacity)) : 0.9,
+      presetId: typeof p.presetId === 'string' && SKIN_PRESETS.some((s) => s.id === p.presetId) ? p.presetId : null,
     }
   } catch {
     return defaultConfig()
@@ -194,6 +200,20 @@ const rowLabel: CSSProperties = { width: 90, flex: 'none', color: 'var(--dsw-ali
 const field: CSSProperties = { color: 'var(--dsw-alias-label-primary)', background: 'var(--dsw-specific-input-major)', border: '1px solid var(--dsw-alias-border-l2)', borderRadius: 8, padding: '4px 8px', fontSize: 13 }
 const hint: CSSProperties = { color: 'var(--dsw-alias-label-tertiary)', fontSize: 12 }
 const swatch: CSSProperties = { width: 24, height: 24, borderRadius: 8, border: '1px solid var(--dsw-alias-border-l2)', cursor: 'pointer', padding: 0 }
+const card: CSSProperties = {
+  width: 152,
+  borderRadius: 10,
+  border: '1px solid var(--dsw-alias-border-l2)',
+  overflow: 'hidden',
+  cursor: 'pointer',
+  background: 'var(--dsw-alias-bg-layer-2)',
+  padding: 0,
+  textAlign: 'left',
+}
+const cardThumb: CSSProperties = { height: 84, backgroundSize: 'cover', backgroundPosition: 'center' }
+const cardBody: CSSProperties = { padding: '6px 8px' }
+const cardName: CSSProperties = { fontSize: 12, color: 'var(--dsw-alias-label-primary)', fontWeight: 600, lineHeight: 1.4 }
+const cardDesc: CSSProperties = { fontSize: 11, color: 'var(--dsw-alias-label-tertiary)', lineHeight: 1.35, marginTop: 2 }
 
 function SkinSection(): ReactElement {
   const [cfg, setCfg] = useState<SkinConfig>(() => loadConfig())
@@ -203,7 +223,18 @@ function SkinSection(): ReactElement {
     saveConfig(cfg)
   }, [cfg])
 
-  const update = (patch: Partial<SkinConfig>): void => setCfg((prev) => ({ ...prev, ...patch }))
+  /** 手动微调（改色/换图/调透明度）会退出预设模式；keepPreset 用于开关等非样式改动。 */
+  const update = (patch: Partial<SkinConfig>, opts?: { keepPreset?: boolean }): void =>
+    setCfg((prev) => ({ ...prev, ...patch, presetId: opts?.keepPreset ? prev.presetId : null }))
+
+  const applyPreset = (preset: SkinPreset): void =>
+    setCfg({
+      enabled: true,
+      accent: preset.accent,
+      bgImage: preset.bgImage,
+      bgOpacity: preset.bgOpacity,
+      presetId: preset.id,
+    })
 
   const onFile = (e: ChangeEvent<HTMLInputElement>): void => {
     const file = e.target.files?.[0]
@@ -220,9 +251,41 @@ function SkinSection(): ReactElement {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '4px 0' }}>
+        <span style={{ ...rowLabel, width: 'auto', fontWeight: 600 }}>二次元预设皮肤</span>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          {SKIN_PRESETS.map((preset) => {
+            const active = cfg.presetId === preset.id
+            return (
+              <button
+                key={preset.id}
+                title={`${preset.name} · ${preset.credit}`}
+                style={{
+                  ...card,
+                  outline: active ? '2px solid var(--dsw-alias-brand-primary)' : 'none',
+                  outlineOffset: 1,
+                }}
+                onClick={() => applyPreset(preset)}
+              >
+                <div style={{ ...cardThumb, backgroundImage: `url("${preset.bgImage}")` }} />
+                <div style={cardBody}>
+                  <div style={cardName}>{preset.name}</div>
+                  <div style={cardDesc}>{preset.desc}</div>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+        {cfg.presetId !== null && (
+          <span style={hint}>
+            当前预设：{SKIN_PRESETS.find((s) => s.id === cfg.presetId)?.name ?? ''}（素材署名：{SKIN_PRESETS.find((s) => s.id === cfg.presetId)?.credit ?? ''}，改动下方选项即切换为自定义）
+          </span>
+        )}
+      </div>
+
       <div style={row}>
         <span style={rowLabel}>启用皮肤</span>
-        <input type="checkbox" checked={cfg.enabled} onChange={(e) => update({ enabled: e.target.checked })} />
+        <input type="checkbox" checked={cfg.enabled} onChange={(e) => update({ enabled: e.target.checked }, { keepPreset: true })} />
       </div>
 
       <div style={row}>
