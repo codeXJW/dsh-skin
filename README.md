@@ -1,9 +1,12 @@
 # dsh-skin — DSH Web UI 换肤插件
 
-给 DSH Web 界面换肤：**自定义主题色 + 上传背景图**，设置面板即改即生效，配置存浏览器本地（localStorage）。
+给 DSH Web 界面换肤：**完整主题包 + 简约皮肤（主题色/背景图）**，设置面板即改即生效，配置存浏览器本地（localStorage）。
 
-- 主题色：取色器 / 8 个预设色板，自动生成 DeepSeek 风格 11 级色阶并覆盖 `--dsw-*` 设计 token（亮/暗两套），组件全部消费 token → 一处覆盖全局换肤
-- 背景图：上传图片（≤2.5MB，存 localStorage），全屏固定层 + 主背景半透明化，附透明度滑块
+- **完整主题包（pack）**：自带全部 CSS/DOM 装饰/observer 生命周期的整包皮肤，昼夜自动跟随官方亮暗切换。内置：
+  - `深海女仆工坊 · 完整主题`：双女仆立绘 + 金框侧栏 + 蕾丝帘饰带 + 缎带选中态（素材 CC BY-NC-SA 4.0，署名链见 `src/client/packs/maid-atelier/NOTICE.md`）
+  - `青瓷·月门（示例整包）`：原创纯 CSS/SVG（月门环/梅枝/印章/玉色 token），可作为新皮肤的参考骨架
+- **简约皮肤（simple）**：取色器 / 预设色板，自动生成 DeepSeek 风格 11 级色阶并覆盖 `--dsw-*` 设计 token（亮/暗两套）；上传背景图（≤2.5MB，存 localStorage）+ 全屏固定层 + 透明度滑块
+- **SkinManager 互斥调度**：同一时刻只有一个皮肤生效，切换 = 先 dispose 旧皮肤再 apply 新皮肤，热切换/卸载不留样式与 DOM 残留
 - 设置入口：`设置 → 外观皮肤`（注册进官方 settings.section 槽，非覆盖官方页面）
 - 零侵入：不碰 DSH 核心，卸载即净，升级 DSH 不受影响（peerDeps 全为范围声明）
 
@@ -11,14 +14,21 @@
 
 ```
 dsh-skin/
-├── lib/                  # 预构建产物（已提交，开箱即用）
-│   ├── index.js          # host 侧（占位，无工具）
-│   └── client.js         # client 侧（样式注入 + 设置面板，ModuleLoader bundle）
-├── src/                  # 源码（改样式/面板从这里改）
-│   ├── index.ts          # host
-│   └── client/index.tsx  # client（React）
-├── install.ps1           # 其它电脑一键安装
-└── scripts/build.sh      # 重建脚本（需 DSH checkout，仅开发用）
+├── lib/                     # 预构建产物（已提交，开箱即用）
+│   ├── index.js             # host 侧（占位，无工具）
+│   └── client.js            # client 侧（皮肤中心 + 全部预设，ModuleLoader bundle）
+├── src/
+│   ├── index.ts             # host
+│   └── client/              # client（React + tsdown 打包）
+│       ├── index.tsx        #   装配 + 设置面板（皮肤中心）
+│       ├── core/            #   config（localStorage）/ manager（SkinManager）/ types（双层预设）
+│       ├── simple/          #   简约皮肤引擎（色阶 + 背景 + token 覆盖）
+│       ├── presets/         #   统一注册表 + 简约预设 + 背景素材（generated）
+│       └── packs/           #   整包皮肤：maid-atelier（完整移植）/ celadon（原创示例）
+├── install.ps1              # 其它电脑一键安装
+└── scripts/
+    ├── build.sh             # host 重建（需 DSH checkout，仅开发用）
+    └── extract-presets.mjs  # 从 .tmp-skins 提取/再生成预设素材与整包 CSS
 ```
 
 ## 在其它电脑上安装（任选其一）
@@ -72,8 +82,21 @@ npm run build:client
 
 ## 配置说明
 
-- 配置（主题色 / 背景图 data URI / 透明度 / 开关）存在浏览器 `localStorage`（键 `dsh-skin:config`），换浏览器/换电脑需重新设置。
-- 背景图建议 ≤2.5MB（localStorage 配额约 5MB）。
+- 配置存在浏览器 `localStorage`（键 `dsh-skin:config`），换浏览器/换电脑需重新设置。
+- 预设只持久化 `presetId`（预设素材不复制进 localStorage）；在预设基础上手动微调才会把当时的生效值固化为自定义配置。
+- 自定义背景图建议 ≤2.5MB（localStorage 配额约 5MB）。
+- 整包皮肤生效期间，主题色/背景图/透明度等自定义选项停用（整包自带全部样式）。
+
+## 新增一个整包皮肤（pack）
+
+照抄 `src/client/packs/celadon/` 即可，四件套：
+
+1. `art.ts` —— 素材（SVG/位图 data URI）
+2. `style.ts` —— 整包 CSS（根作用域 `body[data-dsh-<skin>]`，状态全部走 data-* 钩子）
+3. `runtime.ts` —— `apply(ctx: PackContext)`：先登记清理再写入；装饰节点带 `data-skin-owner` 并在 observer 里忽略自身插入
+4. `index.ts` —— 在 `presets/index.ts` 的 `SKIN_PRESETS` 里注册
+
+生命周期规范：dispose 只恢复本次 activation 改过的状态（快照原值、逆序清理、单项失败不波及其余）。
 
 ## 兼容性
 
