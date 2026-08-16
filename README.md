@@ -89,7 +89,10 @@ npm run build:client
 
 ## 新增一个整包皮肤（pack）
 
-照抄 `src/client/packs/celadon/` 即可，四件套：
+**必读：`src/client/packs/GUIDELINES.md`（整包皮肤开发规范）**——包含块禁令、
+状态投影、dispose 语义、署名链，每条都来自真实事故；提交前过一遍文末自查清单。
+
+实现上照抄 `src/client/packs/celadon/` 即可，四件套：
 
 1. `art.ts` —— 素材（SVG/位图 data URI）
 2. `style.ts` —— 整包 CSS（根作用域 `body[data-dsh-<skin>]`，状态全部走 data-* 钩子）
