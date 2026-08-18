@@ -100,11 +100,12 @@ export function applyOdeta(ctx: PackContext): void {
   ownedNodes.add(snowNear)
   body.prepend(snowFar, snowNear)
 
-  // 本机立绘：存在才挂载
+  // 本机立绘：只在右侧挂一张（CSS 按 data-side='right' 定位退场）
   if (ODETA_LOCAL_PORTRAIT.length > 0) {
     body.setAttribute('data-odeta-has-portrait', '')
     const portrait = makeChrome('img', 'portrait') as HTMLImageElement
     portrait.alt = ''
+    portrait.dataset.side = 'right'
     portrait.src = ODETA_LOCAL_PORTRAIT
     ownedNodes.add(portrait)
     body.prepend(portrait)

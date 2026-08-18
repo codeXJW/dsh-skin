@@ -124,14 +124,14 @@ body[data-dsh-odeta] [data-odeta-chrome='snow-near'] {
 body[data-dsh-odeta] [data-odeta-chrome='snow-far'] {
   background-image: var(--odeta-snow-far-art);
   background-size: 320px 320px;
-  opacity: 0.65;
+  opacity: 0.78;
   animation: odetaSnowFar 46s linear infinite;
 }
 
 body[data-dsh-odeta] [data-odeta-chrome='snow-near'] {
   background-image: var(--odeta-snow-near-art);
   background-size: 480px 480px;
-  opacity: 0.85;
+  opacity: 0.93;
   animation: odetaSnowNear 26s linear infinite;
 }
 
@@ -147,30 +147,31 @@ body[data-dsh-odeta] [data-odeta-chrome='snow-near'] {
 }
 
 body[data-ds-dark-theme][data-dsh-odeta] [data-odeta-chrome='snow-far'] {
-  opacity: 0.5;
+  opacity: 0.65;
 }
 
 body[data-ds-dark-theme][data-dsh-odeta] [data-odeta-chrome='snow-near'] {
-  opacity: 0.62;
+  opacity: 0.75;
 }
 
 /* 会话进行中：雪变小变淡，让位给内容。 */
 body[data-dsh-odeta][data-odeta-chat-active] [data-odeta-chrome='snow-far'] {
-  opacity: 0.4;
+  opacity: 0.55;
 }
 
 body[data-dsh-odeta][data-odeta-chat-active] [data-odeta-chrome='snow-near'] {
-  opacity: 0.52;
+  opacity: 0.66;
 }
 
-/* ── 立绘层（仅本机立绘存在时挂载） ── */
+/* ── 立绘层（仅本机立绘存在时挂载，左右各一张） ── */
 
 body[data-dsh-odeta] [data-odeta-chrome='portrait'] {
   position: fixed;
-  right: clamp(0px, 0.5vw, 12px);
   bottom: 0;
-  z-index: 0;
-  height: clamp(480px, 88vh, 1080px);
+  /* z-index 抬到侧栏半透明背景之上，否则左侧立绘会被侧栏盖住透不出来 */
+  z-index: 1;
+  /* 缩小默认尺寸：奥黛塔立绘较高(1024x1536)，原 clamp 撑满右下会挡内容 */
+  height: clamp(340px, 62vh, 760px);
   width: auto;
   max-width: none;
   object-fit: contain;
@@ -180,10 +181,27 @@ body[data-dsh-odeta] [data-odeta-chrome='portrait'] {
   transition: opacity 520ms ease, transform 620ms cubic-bezier(0.22, 0.78, 0.2, 1), height 620ms cubic-bezier(0.22, 0.78, 0.2, 1);
 }
 
-body[data-dsh-odeta][data-odeta-chat-active] [data-odeta-chrome='portrait'] {
+body[data-dsh-odeta] [data-odeta-chrome='portrait'][data-side='left'] {
+  left: clamp(0px, 0.5vw, 12px);
+}
+
+body[data-dsh-odeta] [data-odeta-chrome='portrait'][data-side='right'] {
+  right: clamp(0px, 0.5vw, 12px);
+}
+
+/* 会话进行中：两侧向外推开（远离内容，不再挡回复） */
+body[data-dsh-odeta][data-odeta-chat-active] [data-odeta-chrome='portrait'][data-side='left'] {
   height: clamp(360px, 58vh, 700px);
   opacity: 0.85;
-  transform: translateX(clamp(24px, 4vw, 80px));
+  /* 左侧向左推（负值，脱离内容） */
+  transform: translateX(calc(-1 * clamp(4px, 0.75vw, 14px)));
+}
+
+body[data-dsh-odeta][data-odeta-chat-active] [data-odeta-chrome='portrait'][data-side='right'] {
+  height: clamp(360px, 58vh, 700px);
+  opacity: 0.85;
+  /* 右侧向右推（正值，脱离内容） */
+  transform: translateX(clamp(4px, 0.75vw, 14px));
 }
 
 body[data-ds-dark-theme][data-dsh-odeta] [data-odeta-chrome='portrait'] {
