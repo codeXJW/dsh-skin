@@ -1,0 +1,25 @@
+# @dsh-external/dsh-skin bundle patch
+#
+# 这是本包的 `dsh.bundle.patch` 层（package.json 的 `dsh.bundle.patch` 指向本文件）。
+# 机制（来自 DSH 源码 dsh-plugin-manager / profile-boot / client-modules）：
+#
+#   dsh plugin --profile <name> add <本包>
+#     → CLI 看到 package.json 声明了 dsh.bundle.patch，
+#       把本包名追加进 dsh.profile.bundles（否则只当普通依赖、不进 Loader，见下）。
+#   profile 启动
+#     → 按 dsh.profile.bundles 顺序应用各 bundle 的 patch 列表，
+#       顶层 `insert` 把本插件作为条目 push 进 cordis Loader 树。
+#   clientModules（`inject = ["loader"]`）
+#     → **只扫描 Loader 里已挂载的条目**，从其 package.json 的 `dsh.client`
+#       发现浏览器半并组成 __DSH_BOOT__ 图。本包 client 半由此加载。
+#
+# 关键：纯 client 插件也必须先作为 Loader 条目挂载。没有 dsh.bundle 时，
+# `plugin add` 只装成普通依赖（打 "not a profile layer" 警告），dsh.client
+# 永远不会被扫描 → 设置里看不到「外观皮肤」。这正是本文件存在的原因。
+#
+# 顶层 insert（patch 级别无 id）→ applyEntryPatches 走 data.push(...insert)。
+# config 传空对象：本插件 host apply 不读取配置，仅为满足条目形状。
+- insert:
+    - id: dsh-skin
+      name: '@dsh-external/dsh-skin'
+      config: {}

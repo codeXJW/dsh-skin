@@ -4,87 +4,114 @@
  *  - [data-celadon-chat-active]      会话进行中 → 装饰退位
  *  - [data-celadon-sidebar='rail'|'narrow'|'wide']  侧栏宽度分档
  * 亮/暗双套跟随官方 body[data-ds-dark-theme]。
+ *
+ * 结构：皮肤自有变量（--celadon-*）+ 宿主 --dsw-* token 覆盖（经注册表
+ * core/tokens.ts 生成，语义 key 取色、类型化、亮/暗成对）+ 装饰段。
  */
-export const CELADON_CSS = /* css */ `
-body[data-dsh-celadon] {
+import { buildTokenRules, type PaletteInput } from '../../core/tokens'
+
+/* ── 皮肤自有变量（非宿主 token，供装饰段消费） ───────────────── */
+
+const CELADON_LIGHT_CUSTOM = `body[data-dsh-celadon] {
   --celadon-jade: #3f7d6b;
   --celadon-jade-deep: #2c5a4c;
   --celadon-gold: #b89b5e;
   --celadon-ink: #23302b;
   --celadon-paper: #f4f1e6;
   --celadon-seal: #b03a2e;
+}`
 
-  --dsw-alias-bg-base: transparent;
-  --dsw-alias-bg-layer-1: rgba(246, 244, 236, 0.74);
-  --dsw-alias-bg-layer-2: rgba(238, 235, 224, 0.86);
-  --dsw-alias-bg-layer-3: rgba(230, 227, 214, 0.9);
-  --dsw-alias-bg-overlay: rgba(246, 244, 236, 0.96);
-  --dsw-alias-bg-module-platform: rgba(238, 235, 224, 0.8);
-  --dsw-alias-border-l1: rgba(63, 125, 107, 0.16);
-  --dsw-alias-border-l2-darkmode-thin: rgba(63, 125, 107, 0.22);
-  --dsw-alias-border-l2: rgba(63, 125, 107, 0.28);
-  --dsw-alias-border-l3: rgba(184, 155, 94, 0.55);
-  --dsw-alias-brand-primary: #3f7d6b;
-  --dsw-alias-brand-text: #2c5a4c;
-  --dsw-alias-button-primary-hover: #4d8f7b;
-  --dsw-alias-button-primary-dimmed: rgba(63, 125, 107, 0.14);
-  --dsw-alias-button-elevated-fill: rgba(250, 248, 240, 0.88);
-  --dsw-alias-button-floating-fill: rgba(250, 248, 240, 0.94);
-  --dsw-alias-button-floating-hover: #e9e4d2;
-  --dsw-alias-interactive-bg-active: rgba(184, 155, 94, 0.2);
-  --dsw-alias-interactive-bg-hover: rgba(63, 125, 107, 0.1);
-  --dsw-alias-interactive-bg-hover-solid: #e2e7dc;
-  --dsw-alias-label-primary: #23302b;
-  --dsw-alias-label-primary-bluish: #2c5a4c;
-  --dsw-alias-label-secondary: #4c5a52;
-  --dsw-alias-label-tertiary: #6d7a70;
-  --dsw-alias-label-caption: #8a948a;
-  --dsw-alias-state-business-primary: #3f7d6b;
-  --dsw-alias-state-business-tertiary: #dde5da;
-  --dsw-specific-input-major: rgba(250, 248, 240, 0.86);
-  --dsw-specific-selector: rgba(226, 231, 220, 0.9);
-  --dsw-specific-sidebar-fill: rgba(232, 238, 230, 0.8);
-  --dsw-specific-menu: rgba(246, 244, 236, 0.94);
-}
-
-body[data-ds-dark-theme][data-dsh-celadon] {
+const CELADON_DARK_CUSTOM = `body[data-ds-dark-theme][data-dsh-celadon] {
   --celadon-jade: #7fb3a1;
   --celadon-jade-deep: #a9cabe;
   --celadon-paper: #101c18;
+}`
 
-  --dsw-alias-bg-base: transparent;
-  --dsw-alias-bg-layer-1: rgba(18, 30, 26, 0.88);
-  --dsw-alias-bg-layer-2: rgba(24, 38, 33, 0.92);
-  --dsw-alias-bg-layer-3: rgba(30, 46, 40, 0.94);
-  --dsw-alias-bg-overlay: rgba(16, 28, 24, 0.97);
-  --dsw-alias-bg-module-platform: rgba(24, 38, 33, 0.9);
-  --dsw-alias-border-l1: rgba(143, 184, 168, 0.18);
-  --dsw-alias-border-l2-darkmode-thin: rgba(143, 184, 168, 0.26);
-  --dsw-alias-border-l2: rgba(143, 184, 168, 0.3);
-  --dsw-alias-border-l3: rgba(200, 185, 138, 0.5);
-  --dsw-alias-brand-primary: #7fb3a1;
-  --dsw-alias-brand-text: #d9e6de;
-  --dsw-alias-button-primary-hover: #8fb8a8;
-  --dsw-alias-button-primary-dimmed: rgba(127, 179, 161, 0.2);
-  --dsw-alias-button-elevated-fill: rgba(30, 46, 40, 0.94);
-  --dsw-alias-button-floating-fill: rgba(34, 52, 45, 0.96);
-  --dsw-alias-button-floating-hover: #2c443a;
-  --dsw-alias-interactive-bg-active: rgba(200, 185, 138, 0.22);
-  --dsw-alias-interactive-bg-hover: rgba(127, 179, 161, 0.12);
-  --dsw-alias-interactive-bg-hover-solid: #2a4238;
-  --dsw-alias-label-primary: #e4ece6;
-  --dsw-alias-label-primary-bluish: #c6dcd2;
-  --dsw-alias-label-secondary: #b2c4b8;
-  --dsw-alias-label-tertiary: #8ea398;
-  --dsw-alias-label-caption: #74887d;
-  --dsw-alias-state-business-primary: #7fb3a1;
-  --dsw-alias-state-business-tertiary: #2a4238;
-  --dsw-specific-input-major: rgba(22, 36, 31, 0.9);
-  --dsw-specific-selector: rgba(40, 58, 50, 0.92);
-  --dsw-specific-sidebar-fill: rgba(14, 26, 22, 0.9);
-  --dsw-specific-menu: rgba(20, 34, 29, 0.95);
-}
+/* ── 宿主 --dsw-* token 覆盖（缺失键回退宿主原值） ──────────────
+   注：本皮肤现状**覆盖了 label-secondary**（fidelity 键）。buildTokenRules 默认
+   跳过 fidelity 以免把固定 UI 调淡，但纯重构不改既有视觉，故传 allowFidelity
+   予以保留。若日后要遵循信息保真建议（docs/skin-variable-catalog.md §5），
+   应移除该键 —— 那是独立的行为变更，不在本次重构范围。 */
 
+const CELADON_LIGHT_TOKENS = {
+  bgBase: 'transparent',
+  bgLayer1: 'rgba(246, 244, 236, 0.74)',
+  bgLayer2: 'rgba(238, 235, 224, 0.86)',
+  bgLayer3: 'rgba(230, 227, 214, 0.9)',
+  bgOverlay: 'rgba(246, 244, 236, 0.96)',
+  bgModulePlatform: 'rgba(238, 235, 224, 0.8)',
+  borderL1: 'rgba(63, 125, 107, 0.16)',
+  borderL2DarkmodeThin: 'rgba(63, 125, 107, 0.22)',
+  borderL2: 'rgba(63, 125, 107, 0.28)',
+  borderL3: 'rgba(184, 155, 94, 0.55)',
+  brandPrimary: '#3f7d6b',
+  brandText: '#2c5a4c',
+  buttonPrimaryHover: '#4d8f7b',
+  buttonPrimaryDimmed: 'rgba(63, 125, 107, 0.14)',
+  buttonElevatedFill: 'rgba(250, 248, 240, 0.88)',
+  buttonFloatingFill: 'rgba(250, 248, 240, 0.94)',
+  buttonFloatingHover: '#e9e4d2',
+  interactiveBgActive: 'rgba(184, 155, 94, 0.2)',
+  interactiveBgHover: 'rgba(63, 125, 107, 0.1)',
+  interactiveBgHoverSolid: '#e2e7dc',
+  labelPrimary: '#23302b',
+  labelPrimaryBluish: '#2c5a4c',
+  labelSecondary: '#4c5a52',
+  labelTertiary: '#6d7a70',
+  labelCaption: '#8a948a',
+  stateBusinessPrimary: '#3f7d6b',
+  stateBusinessTertiary: '#dde5da',
+  inputMajor: 'rgba(250, 248, 240, 0.86)',
+  selector: 'rgba(226, 231, 220, 0.9)',
+  sidebarFill: 'rgba(232, 238, 230, 0.8)',
+  menu: 'rgba(246, 244, 236, 0.94)',
+} satisfies PaletteInput
+
+const CELADON_DARK_TOKENS = {
+  bgBase: 'transparent',
+  bgLayer1: 'rgba(18, 30, 26, 0.88)',
+  bgLayer2: 'rgba(24, 38, 33, 0.92)',
+  bgLayer3: 'rgba(30, 46, 40, 0.94)',
+  bgOverlay: 'rgba(16, 28, 24, 0.97)',
+  bgModulePlatform: 'rgba(24, 38, 33, 0.9)',
+  borderL1: 'rgba(143, 184, 168, 0.18)',
+  borderL2DarkmodeThin: 'rgba(143, 184, 168, 0.26)',
+  borderL2: 'rgba(143, 184, 168, 0.3)',
+  borderL3: 'rgba(200, 185, 138, 0.5)',
+  brandPrimary: '#7fb3a1',
+  brandText: '#d9e6de',
+  buttonPrimaryHover: '#8fb8a8',
+  buttonPrimaryDimmed: 'rgba(127, 179, 161, 0.2)',
+  buttonElevatedFill: 'rgba(30, 46, 40, 0.94)',
+  buttonFloatingFill: 'rgba(34, 52, 45, 0.96)',
+  buttonFloatingHover: '#2c443a',
+  interactiveBgActive: 'rgba(200, 185, 138, 0.22)',
+  interactiveBgHover: 'rgba(127, 179, 161, 0.12)',
+  interactiveBgHoverSolid: '#2a4238',
+  labelPrimary: '#e4ece6',
+  labelPrimaryBluish: '#c6dcd2',
+  labelSecondary: '#b2c4b8',
+  labelTertiary: '#8ea398',
+  labelCaption: '#74887d',
+  stateBusinessPrimary: '#7fb3a1',
+  stateBusinessTertiary: '#2a4238',
+  inputMajor: 'rgba(22, 36, 31, 0.9)',
+  selector: 'rgba(40, 58, 50, 0.92)',
+  sidebarFill: 'rgba(14, 26, 22, 0.9)',
+  menu: 'rgba(20, 34, 29, 0.95)',
+} satisfies PaletteInput
+
+const CELADON_TOKEN_CSS = buildTokenRules({
+  lightSelector: 'body[data-dsh-celadon]',
+  darkSelector: 'body[data-ds-dark-theme][data-dsh-celadon]',
+  light: CELADON_LIGHT_TOKENS,
+  dark: CELADON_DARK_TOKENS,
+  allowFidelity: true,
+})
+
+/* ── 装饰段：背景、装饰层、侧栏、输入区、滚动条、媒体查询 ────── */
+
+const CELADON_DECOR = /* css */ `
 /* 米纸底 + 月色 + 竹影：纯渐变背景，无任何位图。 */
 body[data-dsh-celadon] {
   background-color: var(--celadon-paper);
@@ -266,3 +293,6 @@ body[data-dsh-celadon] ::-webkit-scrollbar-thumb:hover {
   }
 }
 `
+
+export const CELADON_CSS = [CELADON_LIGHT_CUSTOM, CELADON_DARK_CUSTOM, CELADON_TOKEN_CSS, CELADON_DECOR]
+  .join('\n\n')

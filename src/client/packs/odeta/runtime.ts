@@ -4,11 +4,12 @@
  * 与 celadon 同一骨架（packs/GUIDELINES.md 的 D 章生命周期），多两件事：
  *  1. 本机素材槽：local-art.generated.ts 里有立绘/背景时挂载立绘层并切换
  *     body 背景（快照原值、dispose 恢复）；没有则纯原创装饰版照样完整工作。
- *  2. 双雪层 + 羽毛 + 可选立绘，全部皮肤自有节点（data-skin-owner），
- *     observer 里忽略自身插入（C2）。
+ *  2. 双雪层 + 角落冰晶/雪花点缀 + 可选立绘，全部皮肤自有节点
+ *     （data-skin-owner），observer 里忽略自身插入（C2）。
+ *     （原侧栏天鹅羽、顶部冰挂与按钮底部冰挂已按需求移除。）
  */
 import type { PackContext } from '../../core/types'
-import { ODETA_ICE_CRYSTAL, ODETA_SNOW_TILE_FAR, ODETA_SNOW_TILE_NEAR, ODETA_SWAN_FEATHER } from './art'
+import { ODETA_ICE_CRYSTAL, ODETA_SNOW_ACCENT, ODETA_SNOW_TILE_FAR, ODETA_SNOW_TILE_NEAR } from './art'
 import { ODETA_LOCAL_BACKDROP, ODETA_LOCAL_PORTRAIT } from './local-art.generated'
 import { ODETA_CSS } from './style'
 
@@ -19,8 +20,8 @@ const ACTIVE_CHAT_SELECTOR = "[data-phase='active'] [data-chat-flow]"
 const CHROME_ART_PROPERTIES = [
   '--odeta-snow-far-art',
   '--odeta-snow-near-art',
-  '--odeta-feather-art',
   '--odeta-crystal-art',
+  '--odeta-snow-accent-art',
 ] as const
 
 const BACKDROP_PROPERTIES = [
@@ -80,8 +81,8 @@ export function applyOdeta(ctx: PackContext): void {
   body.dataset.dshOdeta = ''
   body.style.setProperty('--odeta-snow-far-art', `url("${ODETA_SNOW_TILE_FAR}")`)
   body.style.setProperty('--odeta-snow-near-art', `url("${ODETA_SNOW_TILE_NEAR}")`)
-  body.style.setProperty('--odeta-feather-art', `url("${ODETA_SWAN_FEATHER}")`)
   body.style.setProperty('--odeta-crystal-art', `url("${ODETA_ICE_CRYSTAL}")`)
+  body.style.setProperty('--odeta-snow-accent-art', `url("${ODETA_SNOW_ACCENT}")`)
 
   // 本机背景图：存在时切 body 背景并停用 CSS 渐变（样式表按属性钩子切换）
   if (ODETA_LOCAL_BACKDROP.length > 0) {
@@ -99,6 +100,16 @@ export function applyOdeta(ctx: PackContext): void {
   ownedNodes.add(snowFar)
   ownedNodes.add(snowNear)
   body.prepend(snowFar, snowNear)
+
+  // 角落冰晶/雪花点缀 + 边缘霜晕/左侧大冰晶：一次性挂载，均皮肤自有节点
+  // （data-skin-owner + aria-hidden + CSS 里 pointer-events:none，不拦截交互）
+  const crystalTop = makeChrome('span', 'crystal-top')
+  const snowBottom = makeChrome('span', 'snow-bottom')
+  const frostDeco = makeChrome('div', 'frost-deco')
+  ownedNodes.add(crystalTop)
+  ownedNodes.add(snowBottom)
+  ownedNodes.add(frostDeco)
+  body.prepend(crystalTop, snowBottom, frostDeco)
 
   // 本机立绘：只在右侧挂一张（CSS 按 data-side='right' 定位退场）
   if (ODETA_LOCAL_PORTRAIT.length > 0) {
@@ -120,17 +131,12 @@ export function applyOdeta(ctx: PackContext): void {
     body.dataset.odetaSidebar = width <= 120 ? 'rail' : width <= 220 ? 'narrow' : 'wide'
   }
 
-  /** 侧栏装饰：天鹅羽钉进侧栏根（重复调用幂等）。 */
+  /** 侧栏观察：确保 ResizeObserver 挂在当前侧栏根上（幂等；原天鹅羽装饰已移除）。 */
   const decorateSidebar = (): void => {
     const sidebarRoot = document
       .querySelector<HTMLElement>(SIDEBAR_COLUMN_SELECTOR)
       ?.querySelector<HTMLElement>(':scope > div')
     if (!sidebarRoot) return
-    if (!sidebarRoot.querySelector("[data-odeta-chrome='feather']")) {
-      const feather = makeChrome('span', 'feather')
-      ownedNodes.add(feather)
-      sidebarRoot.prepend(feather)
-    }
     if (resizeObserver && sidebarRoot.parentElement !== observedSidebar) {
       if (observedSidebar) resizeObserver.unobserve(observedSidebar)
       observedSidebar = sidebarRoot.parentElement ?? undefined

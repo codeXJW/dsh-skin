@@ -24,7 +24,7 @@ function snowflake(stroke: string, width: number): string {
 /** 远景雪层贴片（小而密，无缝平铺，慢速）。 */
 export const ODETA_SNOW_TILE_FAR = svgUri(
   `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 320'>`
-  + `<g fill='#ffffff' opacity='.6'>`
+  + `<g fill='#a9c8e4' opacity='.75'>`
   + `<circle cx='40' cy='52' r='1.8'/><circle cx='150' cy='30' r='1.4'/><circle cx='262' cy='68' r='2'/>`
   + `<circle cx='90' cy='140' r='1.5'/><circle cx='210' cy='120' r='1.9'/><circle cx='300' cy='170' r='1.4'/>`
   + `<circle cx='55' cy='230' r='2'/><circle cx='170' cy='205' r='1.5'/><circle cx='255' cy='258' r='1.8'/>`
@@ -33,42 +33,34 @@ export const ODETA_SNOW_TILE_FAR = svgUri(
   + `<circle cx='135' cy='178' r='1.8'/><circle cx='25' cy='160' r='1.5'/><circle cx='285' cy='215' r='1.6'/>`
   + `<circle cx='98' cy='262' r='1.4'/><circle cx='205' cy='300' r='1.7'/>`
   + `</g>`
-  + `<g transform='translate(105 80) scale(.55)' opacity='.6'>${snowflake('#ffffff', 2.2)}</g>`
-  + `<g transform='translate(238 232) scale(.45)' opacity='.55'>${snowflake('#ffffff', 2.2)}</g>`
-  + `<g transform='translate(40 190) scale(.4)' opacity='.5'>${snowflake('#eaf3fb', 2.2)}</g>`
-  + `<g transform='translate(290 30) scale(.48)' opacity='.55'>${snowflake('#ffffff', 2.2)}</g>`
+  + `<g transform='translate(105 80) scale(.55)' opacity='.6'>${snowflake('#9cc0e0', 2.2)}</g>`
+  + `<g transform='translate(238 232) scale(.45)' opacity='.55'>${snowflake('#9cc0e0', 2.2)}</g>`
+  + `<g transform='translate(40 190) scale(.4)' opacity='.5'>${snowflake('#b9d2e8', 2.2)}</g>`
+  + `<g transform='translate(290 30) scale(.48)' opacity='.55'>${snowflake('#9cc0e0', 2.2)}</g>`
   + `</svg>`,
 )
 
 /** 近景雪层贴片（大而疏，无缝平铺，快速 → 视差）。 */
 export const ODETA_SNOW_TILE_NEAR = svgUri(
   `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 480'>`
-  + `<g fill='#ffffff' opacity='.75'>`
+  + `<g fill='#8fb8dd' opacity='.8'>`
   + `<circle cx='70' cy='120' r='2.6'/><circle cx='330' cy='60' r='2.2'/><circle cx='430' cy='220' r='2.8'/>`
   + `<circle cx='180' cy='330' r='2.4'/><circle cx='390' cy='420' r='2.2'/><circle cx='50' cy='440' r='2.6'/>`
   + `<circle cx='260' cy='420' r='2'/><circle cx='450' cy='40' r='2.4'/><circle cx='140' cy='230' r='2.1'/>`
   + `</g>`
-  + `<g transform='translate(250 170) scale(1.05)' opacity='.8'>${snowflake('#ffffff', 2)}</g>`
-  + `<g transform='translate(90 390) scale(.8)' opacity='.7'>${snowflake('#eaf3fb', 2)}</g>`
-  + `<g transform='translate(420 350) scale(.62)' opacity='.65'>${snowflake('#ffffff', 2)}</g>`
-  + `<g transform='translate(160 60) scale(.7)' opacity='.7'>${snowflake('#f4f9fd', 2)}</g>`
-  + `<g transform='translate(370 260) scale(.5)' opacity='.6'>${snowflake('#ffffff', 2)}</g>`
+  + `<g transform='translate(250 170) scale(1.05)' opacity='.8'>${snowflake('#8fb8dd', 2)}</g>`
+  + `<g transform='translate(90 390) scale(.8)' opacity='.7'>${snowflake('#a9c8e4', 2)}</g>`
+  + `<g transform='translate(420 350) scale(.62)' opacity='.65'>${snowflake('#8fb8dd', 2)}</g>`
+  + `<g transform='translate(160 60) scale(.7)' opacity='.7'>${snowflake('#b9d2e8', 2)}</g>`
+  + `<g transform='translate(370 260) scale(.5)' opacity='.6'>${snowflake('#8fb8dd', 2)}</g>`
   + `</svg>`,
 )
 
-/** 天鹅羽：白→冰蓝渐变羽片 + 羽轴 + 羽枝，侧栏底部装饰。 */
-export const ODETA_SWAN_FEATHER = svgUri(
-  `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 320'>`
-  + `<defs><linearGradient id='fv' x1='0' y1='0' x2='0' y2='1'>`
-  + `<stop offset='0' stop-color='#ffffff'/><stop offset='.55' stop-color='#dbeaf6'/><stop offset='1' stop-color='#a9c8e4'/>`
-  + `</linearGradient></defs>`
-  + `<path d='M100 12C150 60 168 130 158 200 152 246 130 282 104 306 102 308 98 308 96 306 70 282 48 246 42 200 32 130 50 60 100 12Z' fill='url(#fv)' opacity='.95'/>`
-  + `<path d='M100 12C100 90 100 200 100 310' fill='none' stroke='#8fb3d4' stroke-width='3' stroke-linecap='round'/>`
-  + `<g fill='none' stroke='#b9d2e8' stroke-width='1.6' opacity='.8'>`
-  + `<path d='M100 60 138 84M100 60 62 84'/><path d='M100 110 146 138M100 110 54 138'/>`
-  + `<path d='M100 160 148 192M100 160 52 192'/><path d='M100 210 140 242M100 210 60 242'/>`
-  + `<path d='M100 255 126 280M100 255 74 280'/>`
-  + `</g></svg>`,
+/** 角落雪花点缀：单片六枝晶雪花（复用 snowflake 助手，居中）。 */
+export const ODETA_SNOW_ACCENT = svgUri(
+  `<svg xmlns='http://www.w3.org/2000/svg' viewBox='-18 -18 36 36'>`
+  + `<g opacity='.92'>${snowflake('#bcd6ee', 2.4)}</g>`
+  + `</svg>`,
 )
 
 /** 冰晶：六棱晶形，侧栏区块标记/角饰。 */
