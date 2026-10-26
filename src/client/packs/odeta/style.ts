@@ -2,10 +2,11 @@
  * 奥黛塔 · 冰湖天鹅 —— 整包样式（装饰件原创，MIT）。
  * 遵循 packs/GUIDELINES.md：根作用域 body[data-dsh-odeta]；状态钩子由
  * runtime.ts 投影：
- *  - [data-odeta-chat-active]                     会话进行中 → 立绘退位、雪层保留
+ *  - [data-odeta-chat-active]                     会话进行中 → 雪层保留
  *  - [data-odeta-sidebar='rail'|'narrow'|'wide']  侧栏宽度分档
  *  - [data-odeta-has-backdrop]                    本机背景图存在 → 停用 CSS 渐变
- *  - [data-odeta-has-portrait]                    本机立绘存在（装饰层才挂载）
+ *  - [data-odeta-has-portrait]                    本机角色素材存在
+ *  - [data-odeta-mascot-state='idle'|'busy']       输入框右上角小人 → 待机/响应中
  * 亮/暗双套跟随官方 body[data-ds-dark-theme]。
  *
  * 结构：皮肤自有变量（--odeta-*）+ 宿主 --dsw-* token 覆盖（经注册表
@@ -226,56 +227,10 @@ body[data-ds-dark-theme][data-dsh-odeta][data-odeta-chat-active] [data-odeta-chr
   opacity: 0.8;
 }
 
-/* ── 立绘层（仅本机立绘存在时挂载，左右各一张） ── */
-
-body[data-dsh-odeta] [data-odeta-chrome='portrait'] {
-  position: fixed;
-  bottom: 0;
-  /* z-index 抬到侧栏半透明背景之上，否则左侧立绘会被侧栏盖住透不出来 */
-  z-index: 1;
-  /* 缩小默认尺寸：奥黛塔立绘较高(1024x1536)，原 clamp 撑满右下会挡内容 */
-  height: clamp(340px, 62vh, 760px);
-  width: auto;
-  max-width: none;
-  object-fit: contain;
-  object-position: center bottom;
-  pointer-events: none;
-  filter: drop-shadow(0 18px 26px rgba(31, 50, 69, 0.18));
-  transition: opacity 520ms ease, transform 620ms cubic-bezier(0.22, 0.78, 0.2, 1), height 620ms cubic-bezier(0.22, 0.78, 0.2, 1);
-}
-
-body[data-dsh-odeta] [data-odeta-chrome='portrait'][data-side='left'] {
-  left: clamp(0px, 0.5vw, 12px);
-}
-
-body[data-dsh-odeta] [data-odeta-chrome='portrait'][data-side='right'] {
-  right: clamp(0px, 0.5vw, 12px);
-}
-
-/* 会话进行中：两侧向外推开（远离内容，不再挡回复） */
-body[data-dsh-odeta][data-odeta-chat-active] [data-odeta-chrome='portrait'][data-side='left'] {
-  height: clamp(360px, 58vh, 700px);
-  opacity: 0.85;
-  /* 左侧向左推（负值，脱离内容） */
-  transform: translateX(calc(-1 * clamp(4px, 0.75vw, 14px)));
-}
-
-body[data-dsh-odeta][data-odeta-chat-active] [data-odeta-chrome='portrait'][data-side='right'] {
-  height: clamp(360px, 58vh, 700px);
-  opacity: 0.85;
-  /* 右侧向右推（正值，脱离内容） */
-  transform: translateX(clamp(4px, 0.75vw, 14px));
-}
-
-body[data-ds-dark-theme][data-dsh-odeta] [data-odeta-chrome='portrait'] {
-  filter: brightness(0.88) saturate(0.94) drop-shadow(0 20px 28px rgba(0, 0, 0, 0.32));
-}
-
-@media (max-width: 860px) {
-  body[data-dsh-odeta] [data-odeta-chrome='portrait'] {
-    opacity: 0.6;
-  }
-}
+/* ── 立绘层 ──
+   需求变更：大立绘已不再挂载（会压住正文，见 runtime.ts），
+   仅保留[data-odeta-has-portrait]作为"本机素材存在"的标记。
+   角色本人以小人的形态出现在输入框右上方（见下方 mascot 段）。 */
 
 /* ── 侧栏 ───────────────────────────────────────────────────── */
 
@@ -539,6 +494,165 @@ body[data-dsh-odeta] ::-webkit-scrollbar-thumb:hover {
   }
 }
 
+/* ── 输入框「趴边小人」─────────────────────────────────────────
+   奥黛塔机器人小人趴在输入卡右上沿：身体探出卡片上沿，小手扒住边沿。
+   参照 WorkBuddy / Codex 小机器人的趴边姿态。
+
+   规范：
+   - B2 小人是皮肤自有节点（data-odeta-chrome + data-skin-owner + aria-hidden），
+     这里的 transform/filter 只作用在小人自身，不碰应用容器；
+   - B4 z-index 留在装饰层（1~20），不把输入卡抬进 overlay 层级；
+   - E5 pointer-events:none，绝不拦截输入框点击；
+   - E1 亮/暗各一套描边与投影；
+   - E3 prefers-reduced-motion 下停掉呼吸/眨眼动画。 */
+
+body[data-dsh-odeta] [data-odeta-chrome='mascot'] {
+  position: absolute;
+  top: 0;
+  right: 16px;
+  z-index: 2;
+  /* Q 版全身像：素材 384x416（接近 1:1.08），用 96x104 的框完整容纳 */
+  width: 96px;
+  height: 104px;
+  /* 站在输入框右上角：整体上移 104px → 小人框底与卡片上沿齐平，脚正好落在边沿 */
+  margin-top: -104px;
+  pointer-events: none;
+  transform-origin: 50% 88%;
+  animation: odeta-mascot-breathe 3.6s ease-in-out infinite;
+}
+
+/* ── 形态一：奥黛塔本人 Q 版全身像（本机素材，assets-local/chibi*.webp） ──
+   两张状态图都是整幅透明底全身像，用 contain 完整放进小人框；
+   图底对齐框底 → 脚正好落在输入框上沿，再用 mask 收掉最下缘做柔和过渡。 */
+body[data-dsh-odeta] [data-odeta-chrome='mascot'][data-mascot-art='chibi'] {
+  overflow: hidden;
+  background-image: var(--odeta-mascot-art);
+  background-repeat: no-repeat;
+  background-position: 50% 100%;
+  background-size: contain;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 94%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 94%, transparent 100%);
+  filter: drop-shadow(0 4px 8px rgba(31, 50, 69, 0.26));
+}
+
+/* 运行中：换成"等待/思考"姿态的全身像（规范 C1：切换由 CSS 按状态钩子决定） */
+body[data-dsh-odeta][data-odeta-mascot-state='busy'] [data-odeta-chrome='mascot'][data-mascot-art='chibi'] {
+  background-image: var(--odeta-mascot-art-busy);
+}
+
+/* ── 形态二：原创机器人（无本机素材时的回落，MIT 可分发） ── */
+body[data-dsh-odeta] [data-odeta-chrome='mascot'] .odeta-mascot-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* 裁掉超出小人框底沿的部分，形成半身像断口 */
+  overflow: hidden;
+  filter: drop-shadow(0 3px 5px rgba(31, 50, 69, 0.22));
+}
+
+/* SVG 内部元素做旋转时用 view-box 坐标系定位旋转中心：
+   天线绕与头顶的连接点(48,16)摆动，徽记绕自身中心(48,21.5)旋转。 */
+body[data-dsh-odeta] [data-odeta-chrome='mascot'] .odeta-mascot-badge,
+body[data-dsh-odeta] [data-odeta-chrome='mascot'] .odeta-mascot-antenna {
+  transform-box: view-box;
+}
+
+/* 待机：闭眼柔和的椭圆眼；运行中：切换为发光的方块眼。 */
+body[data-dsh-odeta] [data-odeta-chrome='mascot'] .odeta-mascot-eyes-busy {
+  display: none;
+}
+
+body[data-dsh-odeta][data-odeta-mascot-state='busy'] [data-odeta-chrome='mascot'] .odeta-mascot-eyes-idle {
+  display: none;
+}
+
+body[data-dsh-odeta][data-odeta-mascot-state='busy'] [data-odeta-chrome='mascot'] .odeta-mascot-eyes-busy {
+  display: inline;
+}
+
+/* 运行中：额前金徽转起来，天线轻摆。 */
+body[data-dsh-odeta][data-odeta-mascot-state='busy'] [data-odeta-chrome='mascot'] .odeta-mascot-badge {
+  transform-origin: 48px 18px;
+  animation: odeta-mascot-spin 3.2s linear infinite;
+}
+
+body[data-dsh-odeta][data-odeta-mascot-state='busy'] [data-odeta-chrome='mascot'] .odeta-mascot-antenna {
+  transform-origin: 48px 13px;
+  animation: odeta-mascot-antenna 1.1s ease-in-out infinite;
+}
+
+/* 图片形态（角色本人）没有内部部件，改为整体的"专注"表现：
+   呼吸加快，并加一圈冷光提示正在响应。 */
+body[data-dsh-odeta][data-odeta-mascot-state='busy'] [data-odeta-chrome='mascot'][data-mascot-art='chibi'] {
+  animation-duration: 1.9s;
+  filter: drop-shadow(0 4px 8px rgba(31, 50, 69, 0.26)) drop-shadow(0 0 10px rgba(159, 240, 255, 0.75));
+}
+
+/* 暗色：投影更重一点，亮度压一点，避免亮色衣服在深底上刺眼。 */
+body[data-ds-dark-theme][data-dsh-odeta] [data-odeta-chrome='mascot'][data-mascot-art='chibi'] {
+  filter: brightness(0.92) saturate(0.96) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+}
+
+body[data-ds-dark-theme][data-dsh-odeta][data-odeta-mascot-state='busy'] [data-odeta-chrome='mascot'][data-mascot-art='chibi'] {
+  filter: brightness(0.92) saturate(0.96) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5))
+    drop-shadow(0 0 10px rgba(159, 240, 255, 0.8));
+}
+
+/* 暗色：投影更重一点，冰蓝更亮，压住深底。 */
+body[data-ds-dark-theme][data-dsh-odeta] [data-odeta-chrome='mascot'] .odeta-mascot-svg {
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45));
+}
+
+@keyframes odeta-mascot-breathe {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-2px) rotate(-1.2deg);
+  }
+}
+
+@keyframes odeta-mascot-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes odeta-mascot-antenna {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+/* 窄视口降级：小人缩小并收回一点，避免压住输入区内容。 */
+@media (max-width: 980px) {
+  body[data-dsh-odeta] [data-odeta-chrome='mascot'] {
+    width: 76px;
+    height: 82px;
+    right: 10px;
+    margin-top: -60px;
+  }
+}
+
+@media (max-width: 700px) {
+  body[data-dsh-odeta] [data-odeta-chrome='mascot'] {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-dsh-odeta] [data-odeta-chrome='mascot'],
+  body[data-dsh-odeta] [data-odeta-chrome='mascot'] .odeta-mascot-badge,
+  body[data-dsh-odeta] [data-odeta-chrome='mascot'] .odeta-mascot-antenna {
+    animation: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   body[data-dsh-odeta] [data-odeta-chrome='snow-far'],
   body[data-dsh-odeta] [data-odeta-chrome='snow-near'],
@@ -546,10 +660,6 @@ body[data-dsh-odeta] ::-webkit-scrollbar-thumb:hover {
   body[data-dsh-odeta] [data-odeta-chrome='snow-bottom'],
   body[data-dsh-odeta] [data-odeta-chrome='frost-deco'] {
     animation: none;
-    transition: none;
-  }
-
-  body[data-dsh-odeta] [data-odeta-chrome='portrait'] {
     transition: none;
   }
 }

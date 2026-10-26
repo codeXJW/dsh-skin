@@ -10,18 +10,25 @@
  */
 import type { PackContext } from '../../core/types'
 import { ODETA_ICE_CRYSTAL, ODETA_SNOW_ACCENT, ODETA_SNOW_TILE_FAR, ODETA_SNOW_TILE_NEAR } from './art'
-import { ODETA_LOCAL_BACKDROP, ODETA_LOCAL_PORTRAIT } from './local-art.generated'
+import { ODETA_LOCAL_BACKDROP, ODETA_LOCAL_CHIBI, ODETA_LOCAL_CHIBI_BUSY, ODETA_LOCAL_PORTRAIT } from './local-art.generated'
+import { ODETA_MASCOT_SVG } from './mascot'
 import { ODETA_CSS } from './style'
 
 const SKIN_OWNER = 'odeta-frozen-swan'
 const SIDEBAR_COLUMN_SELECTOR = ":is([data-pane='sidebar'], [class*='sidebarCol'])"
 const ACTIVE_CHAT_SELECTOR = "[data-phase='active'] [data-chat-flow]"
+/** 输入卡本体：宿主用 data-composer-card 标记，天然带 position:relative 且不裁剪。 */
+const COMPOSER_CARD_SELECTOR = '[data-composer-card]'
+/** 宿主运行态指示器：会话运行期间挂载（chat.deepDiving）。 */
+const RUNNING_SELECTOR = '[data-chat-running]'
 
 const CHROME_ART_PROPERTIES = [
   '--odeta-snow-far-art',
   '--odeta-snow-near-art',
   '--odeta-crystal-art',
   '--odeta-snow-accent-art',
+  '--odeta-mascot-art',
+  '--odeta-mascot-art-busy',
 ] as const
 
 const BACKDROP_PROPERTIES = [
@@ -50,6 +57,7 @@ export function applyOdeta(ctx: PackContext): void {
   const hadChatActive = body.hasAttribute('data-odeta-chat-active')
   const hadBackdrop = body.hasAttribute('data-odeta-has-backdrop')
   const hadPortrait = body.hasAttribute('data-odeta-has-portrait')
+  const hadMascotState = body.getAttribute('data-odeta-mascot-state')
   const previousSidebarSize = body.getAttribute('data-odeta-sidebar')
 
   let observer: MutationObserver | undefined
@@ -61,6 +69,8 @@ export function applyOdeta(ctx: PackContext): void {
     if (!hadChatActive) body.removeAttribute('data-odeta-chat-active')
     if (!hadBackdrop) body.removeAttribute('data-odeta-has-backdrop')
     if (!hadPortrait) body.removeAttribute('data-odeta-has-portrait')
+    if (hadMascotState === null) body.removeAttribute('data-odeta-mascot-state')
+    else body.setAttribute('data-odeta-mascot-state', hadMascotState)
     if (previousSidebarSize === null) body.removeAttribute('data-odeta-sidebar')
     else body.setAttribute('data-odeta-sidebar', previousSidebarSize)
     observer?.disconnect()
@@ -111,20 +121,86 @@ export function applyOdeta(ctx: PackContext): void {
   ownedNodes.add(frostDeco)
   body.prepend(crystalTop, snowBottom, frostDeco)
 
-  // 本机立绘：只在右侧挂一张（CSS 按 data-side='right' 定位退场）
+  // 本机立绘：按需求不再挂载大立绘（会压住正文）。素材仍在
+  // assets-local/portrait.*，由 ODETA_LOCAL_CHIBI 裁出小人复用。
   if (ODETA_LOCAL_PORTRAIT.length > 0) {
     body.setAttribute('data-odeta-has-portrait', '')
-    const portrait = makeChrome('img', 'portrait') as HTMLImageElement
-    portrait.alt = ''
-    portrait.dataset.side = 'right'
-    portrait.src = ODETA_LOCAL_PORTRAIT
-    ownedNodes.add(portrait)
-    body.prepend(portrait)
   }
 
   const isSkinChrome = (node: Node): boolean => (
     node instanceof Element && node.getAttribute('data-skin-owner') === SKIN_OWNER
   )
+
+  /**
+   * 输入框右上方的小人：奥黛塔本人半身像（本机素材裁切件）。
+   *
+   * 位置：挂到输入卡**右上角**（absolute，right 偏移），半身浮在输入框右上方，
+   * 不压 accessory 行（该行控件靠左）也不挡输入区正文。
+   *
+   * 素材来源：assets-local/chibi.*（由本机立绘 portrait.* 裁出，属本机素材槽，
+   * 不进仓库）。没有本机素材时回落到原创机器人 SVG（mascot.ts，MIT，可分发），
+   * 保证其它机器 clone 后皮肤仍有小人。
+   *
+   * 规范约束：
+   *  - B2 小人是皮肤自有节点（data-odeta-chrome + data-skin-owner + aria-hidden），
+   *    绝不把 transform/filter 挂到应用容器上；
+   *  - B4 小人 z-index 留在装饰层 1~20，不把输入卡抬进 overlay 层级；
+   *  - C1 忙闲只投影 body 上的 data-* 钩子，样式全在 CSS；
+   *  - D4 幂等：换肤/重建后复用同一节点，重复调用不重复插入。
+   */
+  const mascot = makeChrome('div', 'mascot')
+  // 注意：不要写成 `if (ODETA_LOCAL_CHIBI.length > 0)`——那是编译期内联的字符串
+  // 常量，构建器会常量折叠并把 else 分支（SVG 回落）整体摇掉。本机构建时
+  // 素材非空，摇掉后一旦素材失效就没有兜底。这里用运行时不可折叠的判断：
+  // 先把素材放进数组再取长度，两个分支都会保留在产物里。
+  const chibiArt: string[] = [ODETA_LOCAL_CHIBI]
+  const chibiBusyArt: string[] = [ODETA_LOCAL_CHIBI_BUSY]
+  if (chibiArt[0].length > 0) {
+    // 角色本人（Q 版全身像）。两张状态图都注入成 CSS 变量，
+    // 由 CSS 按 body[data-odeta-mascot-state] 选用（规范 C1：JS 只投影状态钩子）。
+    mascot.dataset.mascotArt = 'chibi'
+    body.style.setProperty('--odeta-mascot-art', `url("${chibiArt[0]}")`)
+    body.style.setProperty('--odeta-mascot-art-busy', `url("${chibiBusyArt[0]}")`)
+  } else {
+    // 无本机素材：原创机器人（内联 SVG，便于 CSS 分别控制眼/徽等部件）
+    mascot.dataset.mascotArt = 'svg'
+    mascot.innerHTML = ODETA_MASCOT_SVG
+  }
+  ownedNodes.add(mascot)
+
+  /** 找到当前生效的输入卡（工作区触发卡与输入卡同名，用可编辑内容区分）。 */
+  const findComposerCard = (): HTMLElement | null => {
+    const cards = Array.from(
+      document.querySelectorAll<HTMLElement>(COMPOSER_CARD_SELECTOR),
+    )
+    return (
+      cards.find((card) => card.querySelector('[contenteditable="true"]') !== null) ??
+      cards[0] ??
+      null
+    )
+  }
+
+  /** 幂等挂载：卡片被 React 重建后重新挂上（同一节点复用，不新建）。 */
+  const mountMascot = (): void => {
+    const card = findComposerCard()
+    if (!card) {
+      mascot.remove()
+      return
+    }
+    if (mascot.parentElement !== card) card.append(mascot)
+  }
+
+  /**
+   * 忙闲态投影：宿主运行指示器（data-chat-running）在会话运行期间挂载。
+   *
+   * 指示器位于**聊天区**子树（不在输入卡内），所以只能靠全局查询判定。
+   * 用「状态是否真的变了」来收敛：避免聊天区每次流式更新都写 body 属性。
+   */
+  const syncMascotState = (): void => {
+    const next = document.querySelector(RUNNING_SELECTOR) !== null ? 'busy' : 'idle'
+    if (body.getAttribute('data-odeta-mascot-state') === next) return
+    body.setAttribute('data-odeta-mascot-state', next)
+  }
 
   const applySidebarWidth = (width: number): void => {
     if (width <= 0) return
@@ -158,12 +234,16 @@ export function applyOdeta(ctx: PackContext): void {
 
   decorateSidebar()
   syncChatState()
+  mountMascot()
+  syncMascotState()
   const initialSidebar = document.querySelector<HTMLElement>(SIDEBAR_COLUMN_SELECTOR)
   if (initialSidebar) applySidebarWidth(initialSidebar.getBoundingClientRect().width)
 
   observer = new MutationObserver((records) => {
     let sidebarChanged = false
     let chatChanged = false
+    let composerChanged = false
+    let runningChanged = false
     for (const record of records) {
       if (record.type === 'attributes') {
         if (record.attributeName === 'data-phase' || record.attributeName === 'data-chat-flow') {
@@ -184,9 +264,24 @@ export function applyOdeta(ctx: PackContext): void {
         || node.querySelector('[data-phase], [data-chat-flow]') !== null)) {
         chatChanged = true
       }
+      // 输入卡被 React 重建 → 重新挂小人（幂等，D4）。
+      if (appNodes.some((node) => node.matches(COMPOSER_CARD_SELECTOR)
+        || node.querySelector(COMPOSER_CARD_SELECTOR) !== null)
+        || target?.closest(COMPOSER_CARD_SELECTOR) !== null) {
+        composerChanged = true
+      }
+      // 运行指示器在聊天区子树内，出现/消失未必命中 RUNNING_SELECTOR 匹配，
+      // 因此聊天区一有变化就重查一次（syncMascotState 内部按状态收敛，不重复写）。
+      if (appNodes.some((node) => node.matches(RUNNING_SELECTOR)
+        || node.querySelector(RUNNING_SELECTOR) !== null)) {
+        runningChanged = true
+      }
+      if (chatChanged) runningChanged = true
     }
     if (sidebarChanged) decorateSidebar()
     if (chatChanged) syncChatState()
+    if (composerChanged) mountMascot()
+    if (runningChanged) syncMascotState()
   })
   observer.observe(body, {
     attributes: true,

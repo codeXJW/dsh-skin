@@ -7,15 +7,20 @@
  *     （module.css 原样转为字符串导出，由 pack runtime 注入并随 dispose 移除）
  *
  * 用法：node scripts/extract-presets.mjs
+ *       node scripts/extract-presets.mjs --odeta-only   （只重生成 odeta 本机素材槽，
+ *         不需要 .tmp-skins 第三方仓库；1~3 段依赖该目录，缺失时用此模式）
  * 素材来源与许可见 src/client/presets/README.md 与
  * src/client/packs/maid-atelier/NOTICE.md（CC BY-NC-SA 4.0 署名链）。
  */
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const tmp = join(root, '.tmp-skins')
+
+/** --odeta-only：只跑第 4 段（本机素材槽），跳过依赖 .tmp-skins 的 1~3 段。 */
+const ODATA_ONLY = process.argv.includes('--odeta-only')
 
 const TOUHOU_TS = join(tmp, 'touhou-hakurei', 'src', 'client', 'background-art.generated.ts')
 const MIKU_JS = join(tmp, 'package', 'lib', 'client.js')
@@ -45,7 +50,7 @@ function webpToDataUri(rel) {
 
 /* ── 1. 简约预设背景 ─────────────────────────────────────────── */
 
-const backgrounds = {
+const backgrounds = ODATA_ONLY ? null : {
   HAKUREI_PALACE_LIGHT: extractString(TOUHOU_TS, 'HAKUREI_PALACE_LIGHT'),
   HAKUREI_PALACE_DARK: extractString(TOUHOU_TS, 'HAKUREI_PALACE_DARK'),
   MAID_PALACE_DAY: webpToDataUri('maid-atelier-palace-day-v4.webp'),
@@ -71,6 +76,14 @@ function writeGenerated(rel, entries, extraHeader = '') {
     console.log(' ', k, Math.round(v.length / 1024) + 'KB')
   }
   console.log('written:', target)
+}
+
+/* ── 1~3 段：依赖 .tmp-skins 第三方仓库（--odeta-only 时跳过） ── */
+
+if (!ODATA_ONLY) {
+if (!existsSync(tmp)) {
+  console.error(`missing ${tmp} —— 1~3 段需要第三方皮肤仓库；只重生成 odeta 槽请用：node scripts/extract-presets.mjs --odeta-only`)
+  process.exit(1)
 }
 
 console.log('== backgrounds.generated.ts ==')
@@ -122,6 +135,7 @@ const cssTarget = join(root, 'src', 'client', 'packs', 'maid-atelier', 'css.gene
 writeFileSync(cssTarget, GEN_HEADER + `export const MAID_ATELIER_CSS = ${JSON.stringify(maidCss)}\n`)
 console.log(' ', 'MAID_ATELIER_CSS', Math.round(maidCss.length / 1024) + 'KB')
 console.log('written:', cssTarget)
+} // end of 1~3 段
 
 /* ── 4. odeta 本机素材槽（assets-local/ 被 gitignore，素材不分发） ── */
 
@@ -140,10 +154,21 @@ function localImage(names) {
   return ''
 }
 
+/**
+ * 读一组「同前缀多后缀」的候选（扩展名列表），命中第一个即返回。
+ * 例：localImageByExt('chibi', ['webp','png','jpg']) → chibi.webp / chibi.png / chibi.jpg
+ */
+function localImageByExt(prefix, exts) {
+  return localImage(exts.map((e) => `${prefix}.${e}`))
+}
+
 console.log('== packs/odeta/local-art.generated.ts ==')
 writeGenerated(['packs', 'odeta', 'local-art.generated.ts'], {
   ODETA_LOCAL_PORTRAIT: localImage(['portrait.webp', 'portrait.png', 'portrait.jpg', 'portrait.jpeg']),
   ODETA_LOCAL_BACKDROP: localImage(['backdrop.webp', 'backdrop.png', 'backdrop.jpg', 'backdrop.jpeg']),
+  // 输入框右上角的小人：Q 版全身像。缺任一状态时皮肤退回原创机器人小人。
+  ODETA_LOCAL_CHIBI: localImageByExt('chibi', ['webp', 'png', 'jpg', 'jpeg']),
+  ODETA_LOCAL_CHIBI_BUSY: localImageByExt('chibi-busy', ['webp', 'png', 'jpg', 'jpeg']),
 }, `// 本机素材（assets-local/，不进仓库）。此文件的本地变更请勿提交；
 // 仓库内版本保持空串占位，其它机器 clone 后皮肤以纯原创装饰版工作。
 `)
