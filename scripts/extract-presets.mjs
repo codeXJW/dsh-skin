@@ -5,10 +5,13 @@
  *     （角色立绘 / chrome 装饰 / art.ts 内嵌件 / 标题栏 SVG 字标）
  *  3. maid-atelier 整包样式 → src/client/packs/maid-atelier/css.generated.ts
  *     （module.css 原样转为字符串导出，由 pack runtime 注入并随 dispose 移除）
+ *  4. 本机素材槽：odeta / blue-fat-fish 两个整包（assets-local/，gitignore）
  *
  * 用法：node scripts/extract-presets.mjs
  *       node scripts/extract-presets.mjs --odeta-only   （只重生成 odeta 本机素材槽，
  *         不需要 .tmp-skins 第三方仓库；1~3 段依赖该目录，缺失时用此模式）
+ *       node scripts/extract-presets.mjs --blue-fat-fish-only
+ *         （只重生成「蓝色大肥鱼」本机素材槽；同样不需要 .tmp-skins）
  * 素材来源与许可见 src/client/presets/README.md 与
  * src/client/packs/maid-atelier/NOTICE.md（CC BY-NC-SA 4.0 署名链）。
  */
@@ -19,8 +22,14 @@ import { fileURLToPath } from 'node:url'
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const tmp = join(root, '.tmp-skins')
 
-/** --odeta-only：只跑第 4 段（本机素材槽），跳过依赖 .tmp-skins 的 1~3 段。 */
-const ODATA_ONLY = process.argv.includes('--odeta-only')
+/**
+ * 互斥的「只跑某一个槽」模式（两个 --only 都跳过依赖 .tmp-skins 的 1~3 段）：
+ *  - --odeta-only         → 只跑第 4 段的 odeta 槽
+ *  - --blue-fat-fish-only → 只跑第 4 段的 blue-fat-fish 槽
+ */
+const ODETA_ONLY = process.argv.includes('--odeta-only')
+const BFF_ONLY = process.argv.includes('--blue-fat-fish-only')
+const SKIP_THIRD_PARTY = ODETA_ONLY || BFF_ONLY
 
 const TOUHOU_TS = join(tmp, 'touhou-hakurei', 'src', 'client', 'background-art.generated.ts')
 const MIKU_JS = join(tmp, 'package', 'lib', 'client.js')
@@ -50,7 +59,7 @@ function webpToDataUri(rel) {
 
 /* ── 1. 简约预设背景 ─────────────────────────────────────────── */
 
-const backgrounds = ODATA_ONLY ? null : {
+const backgrounds = SKIP_THIRD_PARTY ? null : {
   HAKUREI_PALACE_LIGHT: extractString(TOUHOU_TS, 'HAKUREI_PALACE_LIGHT'),
   HAKUREI_PALACE_DARK: extractString(TOUHOU_TS, 'HAKUREI_PALACE_DARK'),
   MAID_PALACE_DAY: webpToDataUri('maid-atelier-palace-day-v4.webp'),
@@ -78,11 +87,11 @@ function writeGenerated(rel, entries, extraHeader = '') {
   console.log('written:', target)
 }
 
-/* ── 1~3 段：依赖 .tmp-skins 第三方仓库（--odeta-only 时跳过） ── */
+/* ── 1~3 段：依赖 .tmp-skins 第三方仓库（--*‑only 时跳过） ── */
 
-if (!ODATA_ONLY) {
+if (!SKIP_THIRD_PARTY) {
 if (!existsSync(tmp)) {
-  console.error(`missing ${tmp} —— 1~3 段需要第三方皮肤仓库；只重生成 odeta 槽请用：node scripts/extract-presets.mjs --odeta-only`)
+  console.error(`missing ${tmp} —— 1~3 段需要第三方皮肤仓库；只重生成本机素材槽请用：node scripts/extract-presets.mjs --odeta-only 或 --blue-fat-fish-only`)
   process.exit(1)
 }
 
@@ -137,15 +146,13 @@ console.log(' ', 'MAID_ATELIER_CSS', Math.round(maidCss.length / 1024) + 'KB')
 console.log('written:', cssTarget)
 } // end of 1~3 段
 
-/* ── 4. odeta 本机素材槽（assets-local/ 被 gitignore，素材不分发） ── */
-
-const odetaLocal = join(root, 'src', 'client', 'packs', 'odeta', 'assets-local')
+/* ── 4. 本机素材槽（assets-local/ 被 gitignore，素材不分发） ── */
 
 /** 按候选文件名读取本机图片为 data URI；全部缺失时返回空串（皮肤退化为纯原创装饰版）。 */
-function localImage(names) {
+function localImage(dir, names) {
   for (const n of names) {
     try {
-      const buf = readFileSync(join(odetaLocal, n))
+      const buf = readFileSync(join(dir, n))
       const ext = n.split('.').pop().toLowerCase()
       const mime = ext === 'png' ? 'image/png' : ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/webp'
       return `data:${mime};base64,${buf.toString('base64')}`
@@ -156,19 +163,38 @@ function localImage(names) {
 
 /**
  * 读一组「同前缀多后缀」的候选（扩展名列表），命中第一个即返回。
- * 例：localImageByExt('chibi', ['webp','png','jpg']) → chibi.webp / chibi.png / chibi.jpg
+ * 例：localImageByExt(dir, 'chibi', ['webp','png','jpg']) → chibi.webp / chibi.png / chibi.jpg
  */
-function localImageByExt(prefix, exts) {
-  return localImage(exts.map((e) => `${prefix}.${e}`))
+function localImageByExt(dir, prefix, exts) {
+  return localImage(dir, exts.map((e) => `${prefix}.${e}`))
 }
+
+const LOCAL_SLOT_HEADER = `// 本机素材（assets-local/，不进仓库）。此文件的本地变更请勿提交；
+// 仓库内版本保持空串占位，其它机器 clone 后皮肤以纯原创装饰版工作。
+`
+
+/* 4a. odeta 本机素材槽 */
+if (!BFF_ONLY) {
+const odetaLocal = join(root, 'src', 'client', 'packs', 'odeta', 'assets-local')
 
 console.log('== packs/odeta/local-art.generated.ts ==')
 writeGenerated(['packs', 'odeta', 'local-art.generated.ts'], {
-  ODETA_LOCAL_PORTRAIT: localImage(['portrait.webp', 'portrait.png', 'portrait.jpg', 'portrait.jpeg']),
-  ODETA_LOCAL_BACKDROP: localImage(['backdrop.webp', 'backdrop.png', 'backdrop.jpg', 'backdrop.jpeg']),
+  ODETA_LOCAL_PORTRAIT: localImage(odetaLocal, ['portrait.webp', 'portrait.png', 'portrait.jpg', 'portrait.jpeg']),
+  ODETA_LOCAL_BACKDROP: localImage(odetaLocal, ['backdrop.webp', 'backdrop.png', 'backdrop.jpg', 'backdrop.jpeg']),
   // 输入框右上角的小人：Q 版全身像。缺任一状态时皮肤退回原创机器人小人。
-  ODETA_LOCAL_CHIBI: localImageByExt('chibi', ['webp', 'png', 'jpg', 'jpeg']),
-  ODETA_LOCAL_CHIBI_BUSY: localImageByExt('chibi-busy', ['webp', 'png', 'jpg', 'jpeg']),
-}, `// 本机素材（assets-local/，不进仓库）。此文件的本地变更请勿提交；
-// 仓库内版本保持空串占位，其它机器 clone 后皮肤以纯原创装饰版工作。
-`)
+  ODETA_LOCAL_CHIBI: localImageByExt(odetaLocal, 'chibi', ['webp', 'png', 'jpg', 'jpeg']),
+  ODETA_LOCAL_CHIBI_BUSY: localImageByExt(odetaLocal, 'chibi-busy', ['webp', 'png', 'jpg', 'jpeg']),
+}, LOCAL_SLOT_HEADER)
+} // end of odeta 槽
+
+/* 4b. 蓝色大肥鱼本机素材槽（可选覆盖输入框右上角的小人） */
+if (!ODETA_ONLY) {
+const bffLocal = join(root, 'src', 'client', 'packs', 'blue-fat-fish', 'assets-local')
+
+console.log('== packs/blue-fat-fish/local-art.generated.ts ==')
+writeGenerated(['packs', 'blue-fat-fish', 'local-art.generated.ts'], {
+  // 输入框右上角小人：放 mascot.* / mascot-busy.* 即启用位图；缺省时用原创手绘 SVG。
+  BFF_LOCAL_MASCOT: localImageByExt(bffLocal, 'mascot', ['webp', 'png', 'jpg', 'jpeg']),
+  BFF_LOCAL_MASCOT_BUSY: localImageByExt(bffLocal, 'mascot-busy', ['webp', 'png', 'jpg', 'jpeg']),
+}, LOCAL_SLOT_HEADER)
+} // end of blue-fat-fish 槽
