@@ -292,23 +292,44 @@ body[data-dsh-maid-atelier] [data-phase='hero'] [class*='previewBadge'] {
   box-shadow: 0 2px 7px rgba(0, 0, 0, 0.28);
 }
 
-/* ── 框3：输入卡上方工具行的「标准模式」下拉 ───────────────────────────
-   生成样式只覆盖了输入卡内部的 modes 触发器（hero 态甚至把 label 藏成
-   42px 圆钮），这个在卡外的实例被漏掉，保留官方透明底 + 深色字。给它
-   与相邻工作区 chip 同款的瓷白胶囊 + 深蓝字；:not() 排除卡内实例，
-   避免破坏卡内圆钮设计。 */
-body[data-dsh-maid-atelier]
-  :is([class*='modes'] button[class*='trigger'], [class*='modes'] [role='button'])
-  :not([data-composer-card] *) {
-  color: #314979;
-  border: 1px solid rgba(197, 164, 104, 0.45);
-  background: rgba(255, 253, 248, 0.62);
-  box-shadow: 0 2px 8px rgba(30, 48, 92, 0.18);
+/* ── 输入卡上方的工作区与模式按钮统一配色 ─────────────────────────────
+   模式按钮按稳定槽位定位；工作区按钮由宿主直接渲染，没有专属 data 钩子，
+   以欢迎页状态和 workspace 类名兜底，避免依赖翻译后的按钮文字。
+   局部重绑 token，不影响输入卡内控件或通过 portal 挂载的下拉菜单。 */
+body[data-dsh-maid-atelier] [data-slot='conversation.hero.agentPreset'],
+body[data-dsh-maid-atelier] :is([data-phase='hero'], [data-content-phase='hero'])
+  button[class*='_workspace'][aria-haspopup='menu'] {
+  --dsw-alias-label-primary: var(--maid-navy-900);
+  --dsw-alias-label-caption: var(--maid-indigo);
+  --dsw-alias-label-quaternary: var(--maid-indigo);
 }
 
-body[data-dsh-maid-atelier]
-  [class*='modes'] :is([class*='triggerLabel'], [class*='chevron'], [class*='triggerIcon'], svg)
-  :not([data-composer-card] *) {
-  color: #314979;
+body[data-dsh-maid-atelier] [data-slot='conversation.hero.agentPreset'] button[aria-haspopup='menu'],
+body[data-dsh-maid-atelier] :is([data-phase='hero'], [data-content-phase='hero'])
+  button[class*='_workspace'][aria-haspopup='menu'] {
+  color: var(--dsw-alias-label-primary);
+  border: 1px solid var(--maid-gold);
+  background: var(--maid-porcelain);
+}
+
+body[data-dsh-maid-atelier] [data-slot='conversation.hero.agentPreset']
+  button[aria-haspopup='menu']:not(:disabled):is(:hover, [aria-expanded='true']),
+body[data-dsh-maid-atelier] :is([data-phase='hero'], [data-content-phase='hero'])
+  button[class*='_workspace'][aria-haspopup='menu']:not(:disabled):is(:hover, [aria-expanded='true']) {
+  background: var(--maid-gold-soft);
+}
+
+/* 禁用态保留可读性，由宿主 disabled 属性继续控制是否可交互。 */
+body[data-dsh-maid-atelier] [data-slot='conversation.hero.agentPreset'] button:disabled,
+body[data-dsh-maid-atelier] :is([data-phase='hero'], [data-content-phase='hero'])
+  button[class*='_workspace'][aria-haspopup='menu']:disabled {
+  --dsw-alias-label-primary: var(--maid-indigo);
+}
+
+body[data-dsh-maid-atelier] [data-slot='conversation.hero.agentPreset'] button:focus-visible,
+body[data-dsh-maid-atelier] :is([data-phase='hero'], [data-content-phase='hero'])
+  button[class*='_workspace'][aria-haspopup='menu']:focus-visible {
+  outline: 2px solid var(--maid-gold-soft);
+  outline-offset: 2px;
 }
 `
