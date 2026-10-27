@@ -8,6 +8,8 @@
  *  - Context 换为 dsh-skin 的 PackContext（effect 语义相同）；
  *  - module.css 不再走 bundler 注入，改为 apply 时挂 <style>、dispose 时摘除；
  *  - 素材来自 scripts/extract-presets.mjs 生成的 *.generated.ts。
+ *  - 新增：输入框右上角的「DeepSeek 小机器人」（本机素材槽 + 原创鲸鱼兜底），
+ *    附加样式在本包自己的 style.ts（主样式 css.generated.ts 是生成物，不手改）。
  */
 import type { PackContext } from '../../core/types'
 import {
@@ -29,6 +31,9 @@ import {
 } from './art.generated'
 import { MAID_PALACE_DAY, MAID_PALACE_NIGHT } from '../../presets/backgrounds.generated'
 import { MAID_ATELIER_CSS } from './css.generated'
+import { MAID_LOCAL_MASCOT, MAID_LOCAL_MASCOT_BUSY } from './local-art.generated'
+import { MAID_MASCOT_SVG } from './mascot'
+import { MAID_ATELIER_EXTRA_CSS } from './style'
 import { MAID_ATELIER_TITLEBAR_BRAND } from './titlebar-brand.generated'
 
 const SKIN_TITLE = '深海女仆工坊 · DeepSeek Harness'
@@ -49,6 +54,10 @@ const WORKSPACE_SELECTOR = "header [role='tablist']"
 const BETTER_SIDEBAR_SELECTOR = '[data-dsh-better-sidebar]'
 const CORDIS_PANEL_SELECTOR = '[data-cordis-panel]'
 const TERMINAL_SELECTOR = `${BETTER_SIDEBAR_SELECTOR} .xterm`
+/** 输入卡本体：宿主 InputBar 的 card（自带 position:relative，不裁剪）。 */
+const COMPOSER_CARD_SELECTOR = '[data-composer-card]'
+/** 宿主运行态指示器：会话运行期间挂载在聊天区（chat.deepDiving）。 */
+const RUNNING_SELECTOR = '[data-chat-running]'
 
 const PROJECTED_STATE_ATTRIBUTES = {
   activeChat: 'data-maid-chat-active',
@@ -86,6 +95,8 @@ const BACKDROP_PROPERTIES = [
   '--maid-settings-frame-art',
   '--maid-workspace-crest-art',
   '--maid-workspace-ribbon-art',
+  '--maid-mascot-art',
+  '--maid-mascot-art-busy',
 ] as const
 
 function createCharacterStage(): HTMLDivElement {
@@ -256,6 +267,8 @@ export function applyMaidAtelier(ctx: PackContext): void {
   for (const attribute of Object.values(PROJECTED_STATE_ATTRIBUTES)) {
     previousProjectedStates.set(attribute, body.getAttribute(attribute))
   }
+  // 小人忙闲态是字符串值（idle/busy），不走 toggleAttribute 的投影表，单独快照（D2）。
+  const previousMascotState = body.getAttribute('data-maid-mascot-state')
 
   const ownedNodes = new Set<Element>()
   const decoratedElements = new Set<HTMLElement>()
@@ -282,6 +295,8 @@ export function applyMaidAtelier(ctx: PackContext): void {
       if (value === null) body.removeAttribute(attribute)
       else body.setAttribute(attribute, value)
     }
+    if (previousMascotState === null) body.removeAttribute('data-maid-mascot-state')
+    else body.setAttribute('data-maid-mascot-state', previousMascotState)
     if (composerMotionTimer !== undefined) clearTimeout(composerMotionTimer)
     if (railSearchFocusFrame !== undefined) cancelAnimationFrame(railSearchFocusFrame)
     if (recoverRailSearchFocus !== undefined) {
@@ -321,6 +336,16 @@ export function applyMaidAtelier(ctx: PackContext): void {
   styleTag.textContent = MAID_ATELIER_CSS
   ownedNodes.add(styleTag)
   document.head.append(styleTag)
+
+  // 附加样式（输入框右上角小人的规则）：主样式 css.generated.ts 是生成物，
+  // 不能手改（规范 F3），本机新增的装饰规则放本包自带的 style.ts，
+  // 同样挂到 ownedNodes，dispose 时摘除。
+  const extraStyleTag = document.createElement('style')
+  extraStyleTag.dataset.skinChrome = 'pack-extra-style'
+  extraStyleTag.dataset.skinOwner = SKIN_OWNER
+  extraStyleTag.textContent = MAID_ATELIER_EXTRA_CSS
+  ownedNodes.add(extraStyleTag)
+  document.head.append(extraStyleTag)
 
   const syncSystemChrome = (): void => {
     const meta = document.head.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
@@ -565,6 +590,76 @@ export function applyMaidAtelier(ctx: PackContext): void {
     }
   }
 
+  /* ── 输入框右上角的「DeepSeek 小机器人」 ────────────────────────────
+     皮肤自有节点（规范 B2：data-skin-chrome + data-skin-owner + aria-hidden，
+     CSS 里 pointer-events:none），挂在输入卡内部、站在卡片上沿。
+
+     素材：
+       - 主形态 = 本机素材 assets-local/mascot.webp / mascot-busy.webp
+         （DeepSeek 小机器人 Q 版全身像，DeepSeek 大肥鱼项目署名许可 1.0）；
+       - 回落 = 本包原创手绘鲸鱼剪影 SVG（mascot.ts，MIT，可分发），
+         保证其它机器 clone 后输入框右上角仍然站着一个小人。
+
+     规范约束：
+       - B2/B4 transform/filter 只作用在小人自身；z-index 留在装饰层（2）；
+       - C1 忙闲只投影 body 上的 data-maid-mascot-state，样式全在 CSS；
+       - D4 幂等：卡片被 React 重建后复用同一节点重新挂载；
+       - D3 节点登记进 ownedNodes，dispose 时摘除。 */
+  const mascot = document.createElement('div')
+  mascot.dataset.skinChrome = 'mascot'
+  mascot.dataset.skinOwner = SKIN_OWNER
+  mascot.setAttribute('aria-hidden', 'true')
+  // 注意：不要写成 `if (MAID_LOCAL_MASCOT.length > 0)`——那是编译期内联的字符串
+  // 常量，构建器会常量折叠并把 else 分支（SVG 回落）整体摇掉。本机构建时
+  // 素材非空，摇掉后一旦素材失效就没有兜底。这里用运行时不可折叠的判断：
+  // 先把素材放进数组再取长度，两个分支都会保留在产物里。
+  const mascotArt: string[] = [MAID_LOCAL_MASCOT]
+  const mascotBusyArt: string[] = [MAID_LOCAL_MASCOT_BUSY]
+  if (mascotArt[0].length > 0) {
+    mascot.dataset.maidMascotArt = 'image'
+    body.style.setProperty('--maid-mascot-art', `url("${mascotArt[0]}")`)
+    body.style.setProperty('--maid-mascot-art-busy', `url("${mascotBusyArt[0]}")`)
+  } else {
+    mascot.dataset.maidMascotArt = 'svg'
+    mascot.innerHTML = MAID_MASCOT_SVG
+  }
+  ownedNodes.add(mascot)
+
+  /** 找到当前生效的输入卡：优先带输入框的那张，避开工作区触发卡。 */
+  const findComposerCard = (): HTMLElement | null => {
+    const cards = Array.from(
+      document.querySelectorAll<HTMLElement>(COMPOSER_CARD_SELECTOR),
+    )
+    return (
+      cards.find((card) => card.querySelector('[data-composer-input]') !== null) ??
+      cards.find((card) => card.querySelector('[contenteditable="true"]') !== null) ??
+      cards[0] ??
+      null
+    )
+  }
+
+  /** 幂等挂载：输入卡被 React 重建后重新挂上（同一节点复用，不新建）。 */
+  const mountMascot = (): void => {
+    const card = findComposerCard()
+    if (!card) {
+      mascot.remove()
+      return
+    }
+    if (mascot.parentElement !== card) card.append(mascot)
+  }
+
+  /**
+   * 忙闲态投影：宿主运行指示器（data-chat-running）在会话运行期间挂载。
+   *
+   * 指示器位于**聊天区**子树（不在输入卡内），所以只能靠全局查询判定。
+   * 用「状态是否真的变了」来收敛：避免聊天区每次流式更新都写 body 属性。
+   */
+  const syncMascotState = (): void => {
+    const next = document.querySelector(RUNNING_SELECTOR) !== null ? 'busy' : 'idle'
+    if (body.getAttribute('data-maid-mascot-state') === next) return
+    body.setAttribute('data-maid-mascot-state', next)
+  }
+
   decorateTitlebarBrand(ownedNodes)
   decorateSidebar(ownedNodes, decoratedElements)
   decorateWorkspaceTree(decoratedElements)
@@ -574,6 +669,8 @@ export function applyMaidAtelier(ctx: PackContext): void {
   syncComposerMotion()
   syncSettingsBackdropFrame()
   syncProjectedState()
+  mountMascot()
+  syncMascotState()
 
   const characterStage = createCharacterStage()
   ownedNodes.add(characterStage)
@@ -612,6 +709,7 @@ export function applyMaidAtelier(ctx: PackContext): void {
     let composerChanged = false
     let settingsStateChanged = false
     let projectedStateChanged = false
+    let mascotChanged = false
     for (const record of records) {
       const target = record.target instanceof Element ? record.target : undefined
       if (target?.closest(TERMINAL_SELECTOR) !== null) continue
@@ -658,6 +756,18 @@ export function applyMaidAtelier(ctx: PackContext): void {
         || target?.matches("header, [data-slot='sidebar.settings']") === true)) {
         projectedStateChanged = true
       }
+      // 输入卡被 React 重建 → 重新挂小人（幂等，D4）。
+      if (appNodes.some(node => nodeTouches(node, COMPOSER_CARD_SELECTOR))
+        || (target !== undefined && target.closest(COMPOSER_CARD_SELECTOR) !== null)) {
+        mascotChanged = true
+      }
+      // 运行指示器（data-chat-running）挂在聊天区子树内，出现/消失未必命中
+      // RUNNING_SELECTOR 匹配，因此聊天区一有变化也重查一次
+      // （syncMascotState 内部按状态收敛，不重复写）。
+      if (appNodes.some(node => nodeTouches(node, RUNNING_SELECTOR))
+        || (target !== undefined && target.closest(RUNNING_SELECTOR) !== null)) {
+        mascotChanged = true
+      }
     }
     if (projectedStateChanged) syncProjectedState()
     if (sidebarStructureChanged) syncSidebarDecorations()
@@ -667,6 +777,11 @@ export function applyMaidAtelier(ctx: PackContext): void {
       syncComposerMotion()
     }
     if (settingsStateChanged) syncSettingsBackdropFrame()
+    // 聊天区变化也可能意味着运行指示器出现/消失，统一复查一次小人状态。
+    if (mascotChanged || projectedStateChanged) {
+      mountMascot()
+      syncMascotState()
+    }
   })
   observer.observe(body, {
     attributes: true,

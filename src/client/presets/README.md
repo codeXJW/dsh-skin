@@ -13,6 +13,7 @@
 | 博丽神社·灵梦（昼/夜） | 博丽神社昼夜实景背景 | [xiake595/touhou-hakurei](https://github.com/xiake595/touhou-hakurei) | CC BY-NC-SA 4.0 |
 | 深海女仆工坊（昼/夜） | 女仆工坊昼夜宫殿背景 | [Small-tailqwq/dsh-deep-whale](https://github.com/Small-tailqwq/dsh-deep-whale)（maid-atelier） | CC BY-NC-SA 4.0 |
 | 初音未来·电子歌姬 | MIKU_ART 背景画作 | [@linxin666/dsh-client-ui-skin-miku](https://www.npmjs.com/package/@linxin666/dsh-client-ui-skin-miku)（作者 涂山苏苏） | BSD-3-Clause |
+| 深海女仆工坊·输入框小人 | DeepSeek 小机器人 Q 版全身像（待机/运行中） | [YunYueSama/codex-deepseek-pet](https://github.com/YunYueSama/codex-deepseek-pet) | 大肥鱼项目署名许可 1.0（**必须署名**；本机素材槽，不随仓库分发） |
 
 ## 署名链（CC BY-NC-SA 4.0 要求）
 
@@ -25,6 +26,13 @@
 - 皮肤工程结构衍生自 dsh-deep-whale / maid-atelier（Small-tailqwq，CC BY-NC-SA 4.0）
 - 背景/角色素材为作者本地素材（博丽神社昼夜实景等），经工具转 webp 内嵌
 - 作者：xiake595
+
+### codex-deepseek-pet（DeepSeek 小机器人）
+- 深海女仆工坊整包输入框右上角的小人素材（`fish_idle.png` / `fish_happy.png`）
+- 许可：「大肥鱼项目署名许可 1.0」——允许使用/修改/分享/商用，**必须署名**：
+  `作者：YunYueSama` / `仓库：https://github.com/YunYueSama/codex-deepseek-pet`
+- 已做的修改：等比缩放至 200×217 并转 WebP，未裁切、未变形
+- 鲸鱼三视图参考（`1190fasheqi/dafeiyu-pet`，MIT）仅作兜底 SVG 的造型参考，不随本插件分发
 
 ## 重新生成
 

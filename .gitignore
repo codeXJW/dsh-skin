@@ -11,5 +11,9 @@ node_modules/
 # 奥黛塔整包的本机素材（立绘/背景仅限本机使用，不分发——见 packs/odeta/README.md）
 src/client/packs/odeta/assets-local/
 
+# 深海女仆工坊整包的本机素材（输入框右上角「DeepSeek 小机器人」，仅限本机使用，
+# 不分发——署名链见 packs/maid-atelier/NOTICE.md）
+src/client/packs/maid-atelier/assets-local/
+
 # 说明：lib/（构建产物）故意纳入提交——让其它电脑 clone 后开箱即用，无需构建工具链。
 # 改源码后请重建并一并提交：见 README「开发 / 重建」。
