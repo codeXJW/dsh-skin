@@ -6,14 +6,12 @@ import type { SkinPreset } from '../core/types'
 import { MAID_ATELIER_PACK } from '../packs/maid-atelier'
 import { CELADON_PACK } from '../packs/celadon'
 import { ODETA_PACK } from '../packs/odeta'
-import { BLUE_FAT_FISH_PACK } from '../packs/blue-fat-fish'
 import { SIMPLE_PRESETS } from './simple'
 
 export const SKIN_PRESETS: SkinPreset[] = [
   MAID_ATELIER_PACK,
   CELADON_PACK,
   ODETA_PACK,
-  BLUE_FAT_FISH_PACK,
   ...SIMPLE_PRESETS,
 ]
 
