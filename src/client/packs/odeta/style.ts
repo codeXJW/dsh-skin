@@ -227,10 +227,44 @@ body[data-ds-dark-theme][data-dsh-odeta][data-odeta-chat-active] [data-odeta-chr
   opacity: 0.8;
 }
 
-/* ── 立绘层 ──
-   需求变更：大立绘已不再挂载（会压住正文，见 runtime.ts），
-   仅保留[data-odeta-has-portrait]作为"本机素材存在"的标记。
-   角色本人以小人的形态出现在输入框右上方（见下方 mascot 段）。 */
+/* ── 立绘层（本机素材）──
+   层级：z-index 0 与雪层同层，但 DOM 顺序在雪层之后、#root 之前（见 runtime.ts），
+   因此「压在飘雪前面、落在正文后面」；pointer-events:none 不拦交互。
+   会话进行中只轻微淡出（0.55）仍可辨认，≤980px 窄屏直接隐藏。
+   素材存在与否由 body[data-odeta-has-portrait] 判定。 */
+body[data-dsh-odeta][data-odeta-has-portrait] [data-odeta-chrome='portrait'] {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  width: min(42vw, 620px);
+  height: min(76vh, 680px);
+  pointer-events: none;
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+  /* 左沿柔化：立绘右贴屏幕边，避免左侧边缘像贴了一张硬图 */
+  -webkit-mask-image: linear-gradient(to left, #000 92%, transparent 100%);
+  mask-image: linear-gradient(to left, #000 92%, transparent 100%);
+}
+
+/* 会话进行中：轻微让位给正文，但仍保持在飘雪前面、清晰可辨 */
+body[data-dsh-odeta][data-odeta-has-portrait][data-odeta-chat-active] [data-odeta-chrome='portrait'] {
+  opacity: 0.55;
+  transform: translateX(10px);
+}
+
+@media (max-width: 980px) {
+  body[data-dsh-odeta] [data-odeta-chrome='portrait'] {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-dsh-odeta] [data-odeta-chrome='portrait'] {
+    transition: none;
+  }
+}
 
 /* ── 侧栏 ───────────────────────────────────────────────────── */
 

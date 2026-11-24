@@ -234,9 +234,9 @@ export type PaletteInput = Partial<Record<SemanticKey, string>>
 
 /** buildTokenRules 的可选项。 */
 export interface BuildTokenRulesOptions {
-  /** 亮色根选择器，如 `body[data-dsh-celadon]`。 */
+  /** 亮色根选择器，如 `body[data-dsh-<skin>]`。 */
   lightSelector: string
-  /** 暗色根选择器，如 `body[data-ds-dark-theme][data-dsh-celadon]`。 */
+  /** 暗色根选择器，如 `body[data-ds-dark-theme][data-dsh-<skin>]`。 */
   darkSelector: string
   light: PaletteInput
   dark: PaletteInput

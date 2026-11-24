@@ -5,6 +5,14 @@
  *    通过 PackContext 登记清理，SkinManager 保证同一时刻只有一个皮肤生效。
  */
 
+/** 官方客户端 layout 服务的可见切片：上游皮肤用它判断「设置面板是否打开」。 */
+export interface PackLayoutFace {
+  panelInfo: {
+    getSnapshot(): { activePanelId: string | null }
+    subscribe(listener: () => void): () => void
+  }
+}
+
 /** 整包皮肤的运行上下文：语义对齐 cordis 的 ctx.effect。 */
 export interface PackContext {
   /**
@@ -12,6 +20,11 @@ export interface PackContext {
    * setup 抛错只记录 console.error，不影响其余清理的登记与执行。
    */
   effect(setup: () => (() => void) | void, label?: string): void
+  /**
+   * 客户端 layout 服务（可选）。SkinManager 在服务缺失时给出降级实现，
+   * 所以 pack 可以无条件读取 ctx.layout.panelInfo。
+   */
+  layout: PackLayoutFace
 }
 
 interface PresetBase {

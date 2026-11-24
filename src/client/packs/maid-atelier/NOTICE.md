@@ -1,3 +1,9 @@
+> **本目录现状（0.1.9 移植版）**：运行时由 `upstream.ts` 从已安装的
+> `@smalltailqwq/dsh-client-ui-skin-maid-atelier@0.1.9` 的 `lib/client.js` 机械移植，
+> 素材来自该包的 `assets/runtime/`，由本插件 Host 半的 `/skin-assets/maid-atelier/*`
+> 路由提供。相对上游去掉了「改窗口标题 / 换 favicon 与 manifest / 同步 theme-color」
+> 这三类浏览器头部行为，其余视觉装饰保持原样。生成脚本：`scripts/transplant-maid.mjs`。
+
 # 深海女仆工坊（maid-atelier）整包素材与署名
 
 本目录的整包皮肤素材提取自

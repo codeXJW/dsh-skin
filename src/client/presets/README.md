@@ -4,14 +4,13 @@
 本插件为个人/非商业用途；素材以各自许可条款使用，请勿将本插件或其素材用于商业用途。
 
 > 「深海女仆工坊 · 完整主题」整包（立绘/chrome 装饰/样式）的素材与署名链
-> 另见 `../packs/maid-atelier/NOTICE.md`；「青瓷·月门」为本插件原创示例（MIT）。
+> 另见 `../packs/maid-atelier/NOTICE.md`。
 
 ## 素材清单
 
 | 预设 | 素材 | 来源 | 许可 |
 |---|---|---|---|
 | 博丽神社·灵梦（昼/夜） | 博丽神社昼夜实景背景 | [xiake595/touhou-hakurei](https://github.com/xiake595/touhou-hakurei) | CC BY-NC-SA 4.0 |
-| 深海女仆工坊（昼/夜） | 女仆工坊昼夜宫殿背景 | [Small-tailqwq/dsh-deep-whale](https://github.com/Small-tailqwq/dsh-deep-whale)（maid-atelier） | CC BY-NC-SA 4.0 |
 | 初音未来·电子歌姬 | MIKU_ART 背景画作 | [@linxin666/dsh-client-ui-skin-miku](https://www.npmjs.com/package/@linxin666/dsh-client-ui-skin-miku)（作者 涂山苏苏） | BSD-3-Clause |
 | 深海女仆工坊·输入框小人 | DeepSeek 小机器人 Q 版全身像（待机/运行中） | [YunYueSama/codex-deepseek-pet](https://github.com/YunYueSama/codex-deepseek-pet) | 大肥鱼项目署名许可 1.0（**必须署名**；本机素材槽，不随仓库分发） |
 

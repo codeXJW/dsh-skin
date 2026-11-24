@@ -16,7 +16,7 @@ import type { ChangeEvent, CSSProperties, ReactElement } from 'react'
 import { defaultConfig, loadConfig, saveConfig } from './core/config'
 import type { SkinConfig } from './core/config'
 import { SkinManager } from './core/manager'
-import type { SimplePreset, SkinPreset } from './core/types'
+import type { PackLayoutFace, SimplePreset, SkinPreset } from './core/types'
 import { SKIN_PRESETS, findPreset } from './presets'
 
 const MAX_FILE_BYTES = 3 * 1024 * 1024
@@ -27,6 +27,12 @@ const COLOR_SWATCHES = [
 ]
 
 const manager = new SkinManager(findPreset)
+
+/**
+ * 客户端 layout 服务（可选）：整包皮肤用它观察「设置面板是否打开」。
+ * 服务缺失时 SkinManager 走降级实现，pack 无需要判空。
+ */
+let packLayout: PackLayoutFace | undefined
 
 /* ── 设置面板（设置 → 外观皮肤） ───────────────────────────────── */
 
@@ -105,7 +111,7 @@ function SkinSection(): ReactElement {
   const [cfg, setCfg] = useState<SkinConfig>(() => loadConfig((id) => findPreset(id) !== undefined))
 
   useEffect(() => {
-    manager.activate(cfg)
+    manager.activate(cfg, packLayout)
     saveConfig(cfg)
   }, [cfg])
 
@@ -257,13 +263,16 @@ type SlotsLike = {
 type SkinClientContext = {
   slots: SlotsLike
   effect(fn: () => (() => void) | void, label?: string): void
+  /** 官方客户端 layout 服务；可能不存在，按可选处理。 */
+  layout?: PackLayoutFace
 }
 
-export const inject = ['slots']
+export const inject = ['slots', 'layout']
 
 export function apply(ctx: SkinClientContext): void {
+  packLayout = ctx.layout
   // 立即按已存配置生效（不依赖用户打开面板）；插件卸载时整体还原。
-  manager.activate(loadConfig((id) => findPreset(id) !== undefined))
+  manager.activate(loadConfig((id) => findPreset(id) !== undefined), packLayout)
   ctx.effect(() => () => manager.deactivate(), 'dsh-skin: skin lifecycle')
 
   // 设置 → 外观皮肤（settings.section 为 ui-settings-general 声明的 root 列表槽）

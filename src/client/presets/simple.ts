@@ -9,8 +9,6 @@ import type { SimplePreset } from '../core/types'
 import {
   HAKUREI_PALACE_LIGHT,
   HAKUREI_PALACE_DARK,
-  MAID_PALACE_DAY,
-  MAID_PALACE_NIGHT,
   MIKU_BACKDROP,
 } from './backgrounds.generated'
 
@@ -38,30 +36,6 @@ export const SIMPLE_PRESETS: SimplePreset[] = [
     bgImage: HAKUREI_PALACE_DARK,
     bgOpacity: 0.9,
     uiAlpha: 0.58,
-  },
-  {
-    kind: 'simple',
-    id: 'maid-day',
-    name: '深海女仆工坊·轻享（昼）',
-    desc: '女仆工坊白昼背景 · 仅背景与配色，不含立绘与装饰',
-    credit: 'dsh-deep-whale（作者 Small-tailqwq）CC BY-NC-SA 4.0',
-    preview: MAID_PALACE_DAY,
-    accent: '#c5a468',
-    bgImage: MAID_PALACE_DAY,
-    bgOpacity: 0.92,
-    uiAlpha: 0.62,
-  },
-  {
-    kind: 'simple',
-    id: 'maid-night',
-    name: '深海女仆工坊·轻享（夜）',
-    desc: '女仆工坊夜景背景 · 更适合暗色模式',
-    credit: 'dsh-deep-whale（作者 Small-tailqwq）CC BY-NC-SA 4.0',
-    preview: MAID_PALACE_NIGHT,
-    accent: '#c5a468',
-    bgImage: MAID_PALACE_NIGHT,
-    bgOpacity: 0.92,
-    uiAlpha: 0.62,
   },
   {
     kind: 'simple',

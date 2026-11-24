@@ -1,7 +1,7 @@
 /**
  * 奥黛塔 · 冰湖天鹅 —— 整包运行时。
  *
- * 与 celadon 同一骨架（packs/GUIDELINES.md 的 D 章生命周期），多两件事：
+ * 与 maid-atelier / css-pack 同一骨架（packs/GUIDELINES.md 的 D 章生命周期），多两件事：
  *  1. 本机素材槽：local-art.generated.ts 里有立绘/背景时挂载立绘层并切换
  *     body 背景（快照原值、dispose 恢复）；没有则纯原创装饰版照样完整工作。
  *  2. 双雪层 + 角落冰晶/雪花点缀 + 可选立绘，全部皮肤自有节点
@@ -121,10 +121,23 @@ export function applyOdeta(ctx: PackContext): void {
   ownedNodes.add(frostDeco)
   body.prepend(crystalTop, snowBottom, frostDeco)
 
-  // 本机立绘：按需求不再挂载大立绘（会压住正文）。素材仍在
-  // assets-local/portrait.*，由 ODETA_LOCAL_CHIBI 裁出小人复用。
+  // 本机立绘：作为**右侧装饰层**挂载（不占正文、不拦截交互）。
+  // 层级：插到 #root 之前、雪层之后 —— 雪层(z-index:0) 在它下面，正文(#root) 在它上面，
+  // 所以立绘「飘雪前面、正文后面」都不会盖住文字（同层级靠 DOM 顺序，见 style.ts 立绘层）。
+  // 会话进行中由 CSS 稍微淡出给正文让位，窄屏直接隐藏。
+  // 素材仍在 assets-local/portrait.*（本机素材槽，不进仓库）。
   if (ODETA_LOCAL_PORTRAIT.length > 0) {
     body.setAttribute('data-odeta-has-portrait', '')
+    const portrait = makeChrome('div', 'portrait')
+    // 2.4MB 的 data URI 直接挂在装饰节点自己的行内样式上，不往 body 写巨型变量。
+    portrait.style.backgroundImage = `url("${ODETA_LOCAL_PORTRAIT}")`
+    portrait.style.backgroundPosition = 'right bottom'
+    portrait.style.backgroundSize = 'contain'
+    portrait.style.backgroundRepeat = 'no-repeat'
+    ownedNodes.add(portrait)
+    const root = document.getElementById('root')
+    if (root && root.parentElement === body) root.before(portrait)
+    else body.append(portrait)
   }
 
   const isSkinChrome = (node: Node): boolean => (

@@ -10,7 +10,7 @@
  * 清理先登记后执行（逆序），单个清理抛错不波及其余清理。
  */
 import type { SkinConfig } from './config'
-import type { PackContext, PackPreset, SkinPreset } from './types'
+import type { PackContext, PackLayoutFace, PackPreset, SkinPreset } from './types'
 import { applySimple } from '../simple/engine'
 
 interface ActiveSkin {
@@ -19,8 +19,24 @@ interface ActiveSkin {
   dispose: () => void
 }
 
+/**
+ * 客户端 layout 服务缺失时的降级实现：永远报告「没有打开的设置面板」。
+ * pack 可以无条件读 ctx.layout.panelInfo，不必自己判空。
+ */
+const FALLBACK_LAYOUT: PackLayoutFace = {
+  panelInfo: {
+    getSnapshot: () => ({ activePanelId: null }),
+    subscribe: () => () => {},
+  },
+}
+
 class PackContextImpl implements PackContext {
+  readonly layout: PackLayoutFace
   private cleanups: Array<{ label?: string; fn: () => void }> = []
+
+  constructor(layout?: PackLayoutFace) {
+    this.layout = layout ?? FALLBACK_LAYOUT
+  }
 
   effect(setup: () => (() => void) | void, label?: string): void {
     let cleanup: (() => void) | void
@@ -46,6 +62,7 @@ class PackContextImpl implements PackContext {
 
 export class SkinManager {
   private active: ActiveSkin | null = null
+  private layout: PackLayoutFace = FALLBACK_LAYOUT
 
   constructor(private readonly resolve: (id: string) => SkinPreset | undefined) {}
 
@@ -54,7 +71,13 @@ export class SkinManager {
     return this.active !== null && this.active.id !== 'simple' ? this.active.id : null
   }
 
-  activate(cfg: SkinConfig): void {
+  /**
+   * 应用配置。
+   * @param cfg - 已持久化的皮肤配置
+   * @param layout - 客户端 layout 服务（整包皮肤可用它观察设置面板状态）；缺省用降级实现
+   */
+  activate(cfg: SkinConfig, layout?: PackLayoutFace): void {
+    if (layout !== undefined) this.layout = layout
     const preset = cfg.presetId !== null ? this.resolve(cfg.presetId) : undefined
     if (cfg.enabled && preset?.kind === 'pack') {
       this.activatePack(preset)
@@ -72,7 +95,7 @@ export class SkinManager {
   private activatePack(preset: PackPreset): void {
     if (this.active?.id === preset.id) return // 幂等：同 pack 重放配置不重建
     this.deactivate()
-    const ctx = new PackContextImpl()
+    const ctx = new PackContextImpl(this.layout)
     try {
       preset.apply(ctx)
     } catch (err) {

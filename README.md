@@ -3,8 +3,8 @@
 给 DSH Web 界面换肤：**完整主题包 + 简约皮肤（主题色/背景图）**，设置面板即改即生效，配置存浏览器本地（localStorage）。
 
 - **完整主题包（pack）**：自带全部 CSS/DOM 装饰/observer 生命周期的整包皮肤，昼夜自动跟随官方亮暗切换。内置：
-  - `深海女仆工坊 · 完整主题`：双女仆立绘 + 金框侧栏 + 蕾丝帘饰带 + 缎带选中态（素材 CC BY-NC-SA 4.0，署名链见 `src/client/packs/maid-atelier/NOTICE.md`）
-  - `青瓷·月门（示例整包）`：原创纯 CSS/SVG（月门环/梅枝/印章/玉色 token），可作为新皮肤的参考骨架
+  - `深海女仆工坊 · 完整主题`：**按已安装的 `@smalltailqwq/dsh-client-ui-skin-maid-atelier@0.1.9` 移植**（CSS 约 152KB / 699 条规则，素材 29 个文件经 Host 只读路由发放）。运行时由 `scripts/transplant-maid.mjs` 机械搬运，去掉改窗口标题 / 换 favicon+manifest / 同步 theme-color 三类浏览器头部行为，其余装饰保持原样（素材 CC BY-NC-SA 4.0，署名链见 `src/client/packs/maid-atelier/NOTICE.md`）
+  - `芙宁娜 · 冰海天穹`：原创整套装饰 + 本机素材槽（立绘/背景仅本机使用，不入库）
 - **简约皮肤（simple）**：取色器 / 预设色板，自动生成 DeepSeek 风格 11 级色阶并覆盖 `--dsw-*` 设计 token（亮/暗两套）；上传背景图（≤2.5MB，存 localStorage）+ 全屏固定层 + 透明度滑块
 - **SkinManager 互斥调度**：同一时刻只有一个皮肤生效，切换 = 先 dispose 旧皮肤再 apply 新皮肤，热切换/卸载不留样式与 DOM 残留
 - 设置入口：`设置 → 外观皮肤`（注册进官方 settings.section 槽，非覆盖官方页面）
@@ -15,8 +15,10 @@
 ```
 dsh-skin/
 ├── lib/                     # 预构建产物（已提交，开箱即用）
-│   ├── index.js             # host 侧（占位，无工具）
+│   ├── index.js             # host 侧：生命周期占位 + /skin-assets/maid-atelier/* 只读素材路由
 │   └── client.js            # client 侧（皮肤中心 + 全部预设，ModuleLoader bundle）
+├── assets/
+│   └── maid-atelier/        # 女仆工坊素材（29 个内容哈希文件，由 host 路由按白名单发放）
 ├── src/
 │   ├── index.ts             # host
 │   └── client/              # client（React + tsdown 打包）
@@ -24,11 +26,12 @@ dsh-skin/
 │       ├── core/            #   config（localStorage）/ manager（SkinManager）/ types（双层预设）
 │       ├── simple/          #   简约皮肤引擎（色阶 + 背景 + token 覆盖）
 │       ├── presets/         #   统一注册表 + 简约预设 + 背景素材（generated）
-│       └── packs/           #   整包皮肤：maid-atelier（完整移植）/ celadon（原创示例）
+│       └── packs/           #   整包皮肤：maid-atelier（0.1.9 移植）/ odeta（芙宁娜）+ css-pack 工厂
 ├── install.ps1              # 其它电脑一键安装
 └── scripts/
     ├── build.sh             # host 重建（需 DSH checkout，仅开发用）
-    └── extract-presets.mjs  # 从 .tmp-skins 提取/再生成预设素材与整包 CSS
+    ├── extract-presets.mjs  # 从 .tmp-skins 提取/再生成预设素材与整包 CSS
+    └── transplant-maid.mjs  # 从已安装的女仆工坊包重新移植（CSS/运行时/素材）
 ```
 
 ## 在其它电脑上安装（任选其一）
@@ -71,7 +74,7 @@ dsh plugin --profile web remove @dsh-external/dsh-skin   # 官方装配的卸载
 ## 开发 / 重建（仅改代码时需要）
 
 ```bash
-# host：用 DSH 源码 checkout 的 tsc 编译（无 checkout 可跳过——lib/index.js 无运行时依赖）
+# host：用 DSH 源码 checkout 的 tsc 编译（无 checkout 可跳过——lib/index.js 无运行时依赖，可直接改）
 node <checkout>/node_modules/typescript/bin/tsc -p tsconfig.json
 # client：tsdown 构建（需先 npm install --legacy-peer-deps）
 npm run build:client
@@ -79,6 +82,18 @@ npm run build:client
 ```
 
 改完记得把 `lib/` 一并提交，保持"clone 即用"。
+
+### 更新女仆工坊皮肤（对齐已安装的新版）
+
+```bash
+# 缺省从 profile 的 node_modules 找包；也可以显式传目录
+node scripts/transplant-maid.mjs [@smalltailqwq/dsh-client-ui-skin-maid-atelier 目录]
+npm run build:client
+```
+
+脚本做三件事：把该包 `lib/client.js` 的 factory 主体搬成 `packs/maid-atelier/upstream.ts`（去掉
+Cordis 装配壳，改为 pack 的 `apply`）；去掉改标题 / favicon+manifest / theme-color 三类头部行为；
+把 `assets/runtime/` 的素材同步到 `assets/maid-atelier/`。`upstream.ts` 是生成物，不要手改。
 
 ## 配置说明
 
@@ -92,19 +107,20 @@ npm run build:client
 **必读：`src/client/packs/GUIDELINES.md`（整包皮肤开发规范）**——包含块禁令、
 状态投影、dispose 语义、署名链，每条都来自真实事故；提交前过一遍文末自查清单。
 
-实现上照抄 `src/client/packs/celadon/` 即可，四件套：
-
-1. `art.ts` —— 素材（SVG/位图 data URI）
-2. `style.ts` —— 整包 CSS（根作用域 `body[data-dsh-<skin>]`，状态全部走 data-* 钩子）
-3. `runtime.ts` —— `apply(ctx: PackContext)`：先登记清理再写入；装饰节点带 `data-skin-owner` 并在 observer 里忽略自身插入
-4. `index.ts` —— 在 `presets/index.ts` 的 `SKIN_PRESETS` 里注册
+- **纯 CSS 皮肤**（只有配色/纹理，没有 DOM 装饰）：用 `src/client/packs/css-pack.ts` 的
+  `makeCssPack()`，每套只要两个文件——`style.ts`（CSS 字符串）与 `index.ts`（元数据 + 调工厂），
+  再在 `src/client/presets/index.ts` 的 `SKIN_PRESETS` 里注册。工厂负责设 body 属性、注入
+  `<style>`、按 `dispose` 收回，并用主色生成卡片缩略图（无需素材文件）。
+- **带 DOM 装饰的皮肤**：以 `src/client/packs/odeta/` 为骨架（四件套：`art.ts` / `style.ts` /
+  `runtime.ts` / `index.ts`），`maid-atelier/` 是完整参照实现。
 
 生命周期规范：dispose 只恢复本次 activation 改过的状态（快照原值、逆序清理、单项失败不波及其余）。
 
 ## 兼容性
 
-- DSH：0.1.0-rc.x（peerDependencies 范围声明，不硬编码版本）
-- 依赖注入：`@deepseek-ai/dsh-client-ui-slots`（官方内置）——无需额外安装
+- DSH：0.2.x（实测 0.2.2-rc.5；peerDependencies 为范围声明，不硬编码版本）
+- 依赖注入：`@deepseek-ai/dsh-client-ui-slots` 与 `layout`（官方内置）——无需额外安装
+- 女仆工坊 pack 需要 Host 半注册 `/skin-assets/maid-atelier/*` 路由；若被其它插件占用同一前缀，路由注册会冲突，需要改前缀并同步 `upstream.ts` 的 `skinAssetUrl()`
 
 ## 许可证
 

@@ -1,13 +1,14 @@
 {
   "name": "@dsh-external/dsh-skin",
-  "version": "0.0.1",
-  "description": "换肤插件：主题色 + 自定义背景图 + 设置面板",
+  "version": "0.2.0",
+  "description": "换肤插件：多个整包皮肤（深海女仆工坊 0.1.9 移植 · 青瓷 · 芙宁娜）+ 主题色/背景图自定义 + 设置面板",
   "private": true,
   "type": "module",
   "main": "./lib/index.js",
   "types": "./lib/types/index.d.ts",
   "files": [
     "lib",
+    "assets",
     "cordis.patch.yml"
   ],
   "license": "MIT",
@@ -46,7 +47,8 @@
     "client": {
       "inject": [
         "@deepseek-ai/dsh-client-runtime",
-        "@deepseek-ai/dsh-client-ui-slots"
+        "@deepseek-ai/dsh-client-ui-slots",
+        "@deepseek-ai/dsh-client-ui-layout"
       ],
       "platform": "web"
     }

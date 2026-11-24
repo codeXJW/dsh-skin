@@ -1,8 +1,9 @@
 # 整包皮肤（pack）开发规范
 
-所有 `packs/` 下的整包皮肤**必须**遵循本规范。新增皮肤以 `celadon/` 为骨架模板，
-逐条对照本规范自查；`maid-atelier/` 为完整参照实现。规范中的每条都来自真实事故
-或上游（dsh-deep-whale/maid-atelier）的实战注释，不要"优化掉"看起来多余的限制。
+所有 `packs/` 下的整包皮肤**必须**遵循本规范。纯 CSS 皮肤用 `packs/css-pack.ts` 的
+`makeCssPack()`（只需 `style.ts` + `index.ts`）；需要 DOM 装饰的以 `packs/odeta/` 为骨架模板，
+`maid-atelier/` 为完整参照实现。规范中的每条都来自真实事故或上游（dsh-deep-whale/maid-atelier）
+的实战注释，不要"优化掉"看起来多余的限制。
 
 ## A. 作用域与选择器
 
