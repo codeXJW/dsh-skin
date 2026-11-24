@@ -4,6 +4,7 @@
 
 - **完整主题包（pack）**：自带全部 CSS/DOM 装饰/observer 生命周期的整包皮肤，昼夜自动跟随官方亮暗切换。内置：
   - `深海女仆工坊 · 完整主题`：**按已安装的 `@smalltailqwq/dsh-client-ui-skin-maid-atelier@0.1.9` 移植**（CSS 约 152KB / 699 条规则，素材 29 个文件经 Host 只读路由发放）。运行时由 `scripts/transplant-maid.mjs` 机械搬运，去掉改窗口标题 / 换 favicon+manifest / 同步 theme-color 三类浏览器头部行为，其余装饰保持原样（素材 CC BY-NC-SA 4.0，署名链见 `src/client/packs/maid-atelier/NOTICE.md`）
+  - `鲸鱼娘昼夜工坊 · 场景版`：按上游 0.1.12 的预览适配 DSH 0.2.x。白昼水晶工坊与夜晚月潮观测室随原生亮暗切换，同步应用侧栏伙伴和飘带、输入框顶饰、会话卡片饰边。素材由 `assets/deep-whale-day-night/` 本地提供（CC BY-NC-SA 4.0，署名链见该 pack 的 `NOTICE.md`）
   - `达妮娅 · 虚无之泡`：来自 Ewnscat 的 v1.0.0 双形态皮肤。保留背景、左右立绘、Q 版动图、泡泡和锁链，跟随 DSH 原生亮暗切换。[署名及许可](src/client/packs/denia/NOTICE.md)
   - `芙宁娜 · 冰海天穹`：原创整套装饰 + 本机素材槽（立绘/背景仅本机使用，不入库）
 - **简约皮肤（simple）**：取色器 / 预设色板，自动生成 DeepSeek 风格 11 级色阶并覆盖 `--dsw-*` 设计 token（亮/暗两套）；上传背景图（≤2.5MB，存 localStorage）+ 全屏固定层 + 透明度滑块
@@ -16,10 +17,11 @@
 ```
 dsh-skin/
 ├── lib/                     # 预构建产物（已提交，开箱即用）
-│   ├── index.js             # host 侧：生命周期占位 + /skin-assets/maid-atelier/* 只读素材路由
+│   ├── index.js             # host 侧：生命周期占位 + 两组 /skin-assets/* 只读素材路由
 │   └── client.js            # client 侧（皮肤中心 + 全部预设，ModuleLoader bundle）
 ├── assets/
-│   └── maid-atelier/        # 女仆工坊素材（29 个内容哈希文件，由 host 路由按白名单发放）
+│   ├── maid-atelier/        # 女仆工坊素材（29 个内容哈希文件）
+│   └── deep-whale-day-night/ # 昼夜工坊素材（25 个内容哈希文件 + 2 张预览）
 ├── src/
 │   ├── index.ts             # host
 │   └── client/              # client（React + tsdown 打包）
@@ -27,7 +29,7 @@ dsh-skin/
 │       ├── core/            #   config（localStorage）/ manager（SkinManager）/ types（双层预设）
 │       ├── simple/          #   简约皮肤引擎（色阶 + 背景 + token 覆盖）
 │       ├── presets/         #   统一注册表 + 简约预设 + 背景素材（generated）
-│       └── packs/           #   整包皮肤：maid-atelier（0.1.9 移植）/ odeta（芙宁娜）+ css-pack 工厂
+│       └── packs/           #   整包皮肤：maid-atelier / deep-whale-day-night / odeta + css-pack 工厂
 ├── install.ps1              # 其它电脑一键安装
 └── scripts/
     ├── build.sh             # host 重建（需 DSH checkout，仅开发用）
@@ -121,7 +123,7 @@ Cordis 装配壳，改为 pack 的 `apply`）；去掉改标题 / favicon+manife
 
 - DSH：0.2.x（实测 0.2.2-rc.5；peerDependencies 为范围声明，不硬编码版本）
 - 依赖注入：`@deepseek-ai/dsh-client-ui-slots` 与 `layout`（官方内置）——无需额外安装
-- 女仆工坊 pack 需要 Host 半注册 `/skin-assets/maid-atelier/*` 路由；若被其它插件占用同一前缀，路由注册会冲突，需要改前缀并同步 `upstream.ts` 的 `skinAssetUrl()`
+- 女仆工坊 / 昼夜工坊两个 pack 需要 Host 半注册 `/skin-assets/maid-atelier/*` 与 `/skin-assets/deep-whale-day-night/*` 路由；若被其它插件占用同一前缀，路由注册会冲突，需要改前缀并同步对应 `upstream.ts` 里的素材 URL
 
 ## 许可证
 
