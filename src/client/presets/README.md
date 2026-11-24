@@ -10,6 +10,7 @@
 
 | 预设 | 素材 | 来源 | 许可 |
 |---|---|---|---|
+| 达妮娅 · 虚无之泡 | 亮暗背景、立绘、Q 版 GIF、SVG 装饰 | [Ewnscat / dsh-client-ui-skin-denia v1.0.0](../packs/denia/NOTICE.md) | CC BY-NC-SA 4.0（主题及衍生内容） |
 | 博丽神社·灵梦（昼/夜） | 博丽神社昼夜实景背景 | [xiake595/touhou-hakurei](https://github.com/xiake595/touhou-hakurei) | CC BY-NC-SA 4.0 |
 | 初音未来·电子歌姬 | MIKU_ART 背景画作 | [@linxin666/dsh-client-ui-skin-miku](https://www.npmjs.com/package/@linxin666/dsh-client-ui-skin-miku)（作者 涂山苏苏） | BSD-3-Clause |
 | 深海女仆工坊·输入框小人 | DeepSeek 小机器人 Q 版全身像（待机/运行中） | [YunYueSama/codex-deepseek-pet](https://github.com/YunYueSama/codex-deepseek-pet) | 大肥鱼项目署名许可 1.0（**必须署名**；本机素材槽，不随仓库分发） |

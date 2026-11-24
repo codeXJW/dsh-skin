@@ -4,6 +4,7 @@
 
 - **完整主题包（pack）**：自带全部 CSS/DOM 装饰/observer 生命周期的整包皮肤，昼夜自动跟随官方亮暗切换。内置：
   - `深海女仆工坊 · 完整主题`：**按已安装的 `@smalltailqwq/dsh-client-ui-skin-maid-atelier@0.1.9` 移植**（CSS 约 152KB / 699 条规则，素材 29 个文件经 Host 只读路由发放）。运行时由 `scripts/transplant-maid.mjs` 机械搬运，去掉改窗口标题 / 换 favicon+manifest / 同步 theme-color 三类浏览器头部行为，其余装饰保持原样（素材 CC BY-NC-SA 4.0，署名链见 `src/client/packs/maid-atelier/NOTICE.md`）
+  - `达妮娅 · 虚无之泡`：来自 Ewnscat 的 v1.0.0 双形态皮肤。保留背景、左右立绘、Q 版动图、泡泡和锁链，跟随 DSH 原生亮暗切换。[署名及许可](src/client/packs/denia/NOTICE.md)
   - `芙宁娜 · 冰海天穹`：原创整套装饰 + 本机素材槽（立绘/背景仅本机使用，不入库）
 - **简约皮肤（simple）**：取色器 / 预设色板，自动生成 DeepSeek 风格 11 级色阶并覆盖 `--dsw-*` 设计 token（亮/暗两套）；上传背景图（≤2.5MB，存 localStorage）+ 全屏固定层 + 透明度滑块
 - **SkinManager 互斥调度**：同一时刻只有一个皮肤生效，切换 = 先 dispose 旧皮肤再 apply 新皮肤，热切换/卸载不留样式与 DOM 残留

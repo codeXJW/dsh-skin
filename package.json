@@ -9,7 +9,9 @@
   "files": [
     "lib",
     "assets",
-    "cordis.patch.yml"
+    "cordis.patch.yml",
+    "src/client/packs/denia/LICENSE",
+    "src/client/packs/denia/NOTICE.md"
   ],
   "license": "MIT",
   "peerDependencies": {

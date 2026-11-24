@@ -4,11 +4,13 @@
  */
 import type { SkinPreset } from '../core/types'
 import { MAID_ATELIER_PACK } from '../packs/maid-atelier'
+import { DENIA_PACK } from '../packs/denia'
 import { ODETA_PACK } from '../packs/odeta'
 import { SIMPLE_PRESETS } from './simple'
 
 export const SKIN_PRESETS: SkinPreset[] = [
   MAID_ATELIER_PACK,
+  DENIA_PACK,
   ODETA_PACK,
   ...SIMPLE_PRESETS,
 ]
